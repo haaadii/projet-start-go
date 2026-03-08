@@ -3,38 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrono Aurora</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #22d3ee; /* Cyan électrique */
-            --text: #f8fafc;
-            --sub: #94a3b8;
+            --bg: #f1f5f9; --card-bg: white; --text: #1e293b;
+            --sub-text: #64748b; --border: #e2e8f0; --primary: #6366f1;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9;
+            --sub-text: #94a3b8; --border: #334155; --primary: #818cf8;
         }
 
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            color: var(--text);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
+        body { font-family: sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; color: var(--text); transition: 0.3s; }
+        
+        /* Sélecteur de thème */
+        .theme-switch { margin-bottom: 20px; background: var(--card-bg); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .theme-switch button { width: auto; padding: 8px 12px; font-size: 0.7rem; background: transparent; color: var(--sub-text); border-radius: 8px; }
+        .theme-switch button.active { background: var(--primary); color: white; }
+
+        .card { background: var(--card-bg); width: 100%; max-width: 350px; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
+        
+        .badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; margin-bottom: 20px; transition: 0.3s; background: #e2e8f0; color: #475569; }
+        
+        .val { font-size: 4rem; font-weight: 800; color: var(--text); margin: 10px 0; }
+        .unit { font-size: 1.5rem; color: var(--sub-text); }
+        .speed { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-top: 15px; }
+        
+        button { width: 100%; padding: 18px; border-radius: 18px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Télécommande de test */
+        .remote { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; width: 100%; max-width: 350px; }
+        .remote button { padding: 12px; font-size: 0.8rem; background: var(--sub-text); opacity: 0.7; }
+
+        /* Historique */
+        .history { width: 100%; max-width: 350px; margin-top: 30px; text-align: left; }
+        .history-title { font-size: 0.8rem; font-weight: bold; color: var(--sub-text); margin-bottom: 10px; display: block; text-transform: uppercase; }
+        .h-item { background: var(--card-bg); padding: 12px 15px; border-radius: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 0.9rem; border: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+
+    <div class="theme-switch">
+        <button onclick="setTheme('light')" id="btn-light">Clair</button>
+        <button onclick="setTheme('dark')" id="btn-dark">Sombre</button>
+    </div>
+
+    <div class="card">
+        <div id="badge" class="badge">PRÊT</div>
+        <div style="color:var(--sub-text); font-size:0.75rem; font-weight:700;">TEMPS DE RÉACTION</div>
+        <div class="val"><span id="react">0.000</span><span class="unit">s</span></div>
+        <div id="speed" class="speed">--.- m/s</div>
+        <br>
+        <button id="mainBtn" onclick="startSession()">DÉMARRER LA SESSION</button>
+    </div>
+
+    <div class="remote">
+        <button onclick="simulate('foot')">DÉCOLLAGE</button>
+        <button onclick="simulate('finish')">ARRIVÉE</button>
+    </div>
+
+    <div class="history">
+        <span class="history-title">Dernières sessions</span>
+        <div id="history-list"></div>
+    </div>
+
+    <script>
+        let startTime, timerInterval;
+        let isRunning = false;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+            document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
         }
 
-        /* Barre d'état minimaliste */
-        .status-bar {
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.6rem;
-            text-transform: uppercase;
+        function beep(f, d) {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = f; o.start(); setTimeout(() => o.stop(), d);
+        }
+
+        function startSession() {
+            const b = document.getElementById('badge');
+            b.innerText = "ATTENTION";
+            b.style.background = "#f59e0b"; b.style.color = "white";
+            document.getElementById('mainBtn').disabled = true;
+
+            setTimeout(() => {
+                beep(880, 500);
+                startTime = performance.now();
+                isRunning = true;
+                b.innerText = "EN COURS";
+                b.style.background = "#10b981";
+                timerInterval = setInterval(() => {
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    document.getElementById('react').innerText = elapsed.toFixed(3);
+                }, 50);
+            }, 1000 + Math.random() * 2000);
+        }
+
+        function simulate(type) {
+            if (!isRunning) return;
+            if (type === 'finish') {
+                clearInterval(timerInterval);
+                const final = document.getElementById('react').innerText;
+                const speed = (10 / parseFloat(final)).toFixed(1);
+                document.getElementById('speed').innerText = speed + " m/s";
+                
+                saveResult(final, speed);
+                resetUI();
+            }
+        }
+
+        function resetUI() {
+            isRunning = false;
+            const b = document.getElementById('badge');
+            b.innerText = "FINI";
+            b.style.background = "#6366f1";
+            document.getElementById('mainBtn').disabled = false;
+            document.getElementById('mainBtn').innerText = "RECOMANCER";
+        }
+
+        function saveResult(t, s) {
+            const list = document.getElementById('history-list');
+            const item = document.createElement('div');
+            item.className = 'h-item';
+            item.innerHTML = `<span><b>${t}s</b></span> <span style="color:var(--sub-text)">${s} m/s</span>`;
+            list.prepend(item);
+        }
+
+        // Init thème
+        setTheme('light');
+    </script>
+</body>
+</html>            text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--sub);
         }
