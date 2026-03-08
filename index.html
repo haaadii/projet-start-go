@@ -1,253 +1,1645 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>StartGo Pro - V8</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --bg: #f8fafc; --panel: #ffffff; --stroke: #edf2f7; --text: #1a202c; --sub: #718096; --accent: #ff4757; --nav-bg: #1a202c; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; opacity: 0; transition: opacity 0.4s; }
-        body.loaded { opacity: 1; }
-        .app-wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: var(--nav-bg); color: white; padding: 30px 15px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
-        .main-content { flex: 1; padding: 30px; max-width: 900px; margin: 0 auto; width: 100%; }
-        .glass-card { background: white; border-radius: 20px; border: 1px solid var(--stroke); padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .nav-btn { padding: 12px; border-radius: 10px; cursor: pointer; color: #a0aec0; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; transition: 0.2s; }
-        .nav-btn.active { background: var(--accent); color: white; }
-        input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--stroke); margin-bottom: 10px; outline: none; }
-        button { background: var(--text); color: white; font-weight: 700; border: none; cursor: pointer; }
-        .btn-accent { background: var(--accent); }
-        #chat-box { height: 300px; overflow-y: auto; border: 1px solid var(--stroke); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80% ; font-size: 0.9rem; }
-        .msg.me { align-self: flex-end; background: var(--accent); color: white; }
-        .msg.them { align-self: flex-start; background: var(--stroke); }
-        @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--nav-bg); display: flex; justify-content: space-around; align-items: center; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>StartGo Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg-base:#0f172a;
+  --glass-bg:rgba(255,255,255,0.07);
+  --glass-border:rgba(255,255,255,0.13);
+  --text:#f8fafc;
+  --sub:rgba(255,255,255,0.55);
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#fbbf24;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg-base);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body.light-mode{--bg-base:#f0f4f8;--glass-bg:rgba(255,255,255,0.6);--glass-border:rgba(0,0,0,0.08);--text:#0f172a;--sub:rgba(15,23,42,0.5);}
+
+/* MESH BACKGROUND */
+#mesh-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.35;}
+.blob1{width:500px;height:500px;background:#3b82f6;top:-100px;left:-100px;animation:bm1 20s ease-in-out infinite;}
+.blob2{width:400px;height:400px;background:#8b5cf6;top:30%;right:-80px;animation:bm2 25s ease-in-out infinite;}
+.blob3{width:350px;height:350px;background:#22c55e;bottom:-50px;left:30%;animation:bm3 18s ease-in-out infinite;}
+.blob4{width:300px;height:300px;background:#ef4444;bottom:20%;left:-80px;animation:bm4 22s ease-in-out infinite;}
+.blob5{width:250px;height:250px;background:#f59e0b;top:60%;right:20%;animation:bm5 28s ease-in-out infinite;}
+@keyframes bm1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,60px) scale(1.1)}}
+@keyframes bm2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,80px) scale(0.9)}}
+@keyframes bm3{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(50px,-40px) scale(1.15)}66%{transform:translate(-30px,30px) scale(0.95)}}
+@keyframes bm4{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(70px,-50px) scale(1.05)}}
+@keyframes bm5{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-80px,40px) scale(1.2)}}
+
+/* GLASS */
+.glass-card{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);padding:24px;margin-bottom:20px;}
+.glass-input{background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:12px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.95rem;width:100%;outline:none;transition:border 0.2s;}
+.glass-input:focus{border-color:rgba(255,255,255,0.35);}
+select.glass-input option{background:#1e293b;color:white;}
+
+/* BUTTONS */
+.btn-liquid{background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.25),rgba(255,255,255,0.05));backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);border-radius:50px;color:white;font-weight:700;font-family:'DM Sans',sans-serif;padding:12px 28px;cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 4px 15px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.3);font-size:0.95rem;}
+.btn-liquid:hover{transform:scale(1.04) translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.4);}
+.btn-liquid:active{transform:scale(0.98);}
+.btn-blue{background:radial-gradient(circle at 30% 30%,rgba(59,130,246,0.5),rgba(59,130,246,0.15));border-color:rgba(59,130,246,0.5);box-shadow:0 4px 20px rgba(59,130,246,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
+.btn-green{background:radial-gradient(circle at 30% 30%,rgba(34,197,94,0.5),rgba(34,197,94,0.15));border-color:rgba(34,197,94,0.5);box-shadow:0 4px 20px rgba(34,197,94,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
+.btn-red{background:radial-gradient(circle at 30% 30%,rgba(239,68,68,0.5),rgba(239,68,68,0.15));border-color:rgba(239,68,68,0.5);box-shadow:0 4px 20px rgba(239,68,68,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
+.btn-yellow{background:radial-gradient(circle at 30% 30%,rgba(251,191,36,0.5),rgba(251,191,36,0.15));border-color:rgba(251,191,36,0.5);box-shadow:0 4px 20px rgba(251,191,36,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
+.btn-full{width:100%;display:block;text-align:center;}
+.btn-sm{padding:8px 16px;font-size:0.82rem;}
+
+/* AUTH PAGE */
+#auth-page{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;}
+.auth-card{width:340px;text-align:center;padding:40px 32px;}
+.auth-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:2.5rem;letter-spacing:-1px;margin-bottom:8px;}
+.auth-logo span{color:var(--blue);}
+.auth-sub{color:var(--sub);font-size:0.85rem;margin-bottom:28px;}
+.auth-toggle{font-size:0.82rem;color:var(--sub);cursor:pointer;margin-top:12px;display:inline-block;}
+.auth-toggle:hover{color:var(--text);}
+.auth-error{color:var(--red);font-size:0.82rem;margin-bottom:10px;min-height:20px;}
+.form-label{font-size:0.75rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;display:block;text-align:left;margin-bottom:6px;margin-top:14px;}
+
+/* APP LAYOUT */
+#app{position:relative;z-index:10;display:none;min-height:100vh;}
+#sidebar-desktop{position:fixed;left:20px;top:20px;bottom:20px;width:var(--sidebar-w);background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.3);display:flex;flex-direction:column;padding:24px 16px;z-index:50;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-1px;margin-bottom:32px;padding-left:8px;}
+.sidebar-logo span{color:var(--blue);}
+.nav-items{flex:1;display:flex;flex-direction:column;gap:6px;}
+.nav-item{padding:12px 14px;border-radius:14px;cursor:pointer;color:var(--sub);display:flex;align-items:center;gap:10px;font-size:0.9rem;font-weight:500;transition:all 0.2s;border:1px solid transparent;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+.nav-item.active{color:white;background:var(--glass-bg);border-color:var(--glass-border);}
+.nav-item .badge{margin-left:auto;background:var(--red);color:white;border-radius:10px;padding:2px 7px;font-size:0.7rem;font-weight:800;}
+.sidebar-user{border-top:1px solid var(--glass-border);padding-top:16px;margin-top:8px;}
+.sidebar-user-name{font-weight:700;font-size:0.9rem;}
+.sidebar-user-role{font-size:0.75rem;color:var(--sub);}
+
+#main-content{margin-left:calc(var(--sidebar-w) + 40px);padding:30px 30px 30px 0;min-height:100vh;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* MOBILE NAV */
+#nav-mobile{display:none;position:fixed;bottom:15px;left:15px;right:15px;height:65px;background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:50;justify-content:space-around;align-items:center;}
+.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--sub);font-size:0.6rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:8px 12px;border-radius:12px;transition:0.2s;position:relative;}
+.mob-nav-item.active{color:var(--text);}
+.mob-nav-item .mob-badge{position:absolute;top:4px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;}
+
+@media(max-width:768px){
+  #sidebar-desktop{display:none;}
+  #main-content{margin-left:0;padding:20px 15px 90px;}
+  #nav-mobile{display:flex;}
+}
+
+/* SECTION TITLES */
+.sec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;margin-bottom:20px;letter-spacing:-0.5px;}
+.sec-sub{color:var(--sub);font-size:0.85rem;margin-bottom:20px;}
+.label{font-size:0.72rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;}
+
+/* CHRONO */
+#chrono-display{font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;letter-spacing:-4px;line-height:1;text-align:center;color:var(--blue);transition:color 0.3s;}
+#react-display{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:700;color:var(--yellow);transition:all 0.5s;text-align:center;}
+.state-indicator{text-align:center;padding:8px 20px;border-radius:50px;font-size:0.75rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;display:inline-block;margin:0 auto 16px;}
+.state-idle{background:rgba(255,255,255,0.05);color:var(--sub);}
+.state-wait,.state-alea{background:rgba(251,191,36,0.15);color:var(--yellow);border:1px solid rgba(251,191,36,0.3);}
+.state-bip{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+.state-run{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+.state-end{background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);}
+.state-false{background:rgba(239,68,68,0.2);color:var(--red);border:1px solid rgba(239,68,68,0.4);animation:flashRed 0.3s ease-in-out 3;}
+@keyframes flashRed{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;}
+.stat-box{text-align:center;padding:16px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;}
+.btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+.slider-row{margin:16px 0;}
+.slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+input[type=range]{width:100%;height:5px;border-radius:10px;appearance:none;background:rgba(255,255,255,0.1);outline:none;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;background:var(--text);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+
+/* HISTORY */
+.h-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:18px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.h-name-input{background:none;border:none;font-weight:700;font-size:0.95rem;color:var(--text);font-family:'DM Sans',sans-serif;width:120px;outline:none;}
+.h-name-input:focus{border-bottom:1px solid var(--glass-border);}
+.h-metrics{display:flex;gap:16px;font-size:0.8rem;color:var(--sub);}
+.h-metric span{font-weight:700;font-size:0.95rem;}
+.h-del{background:none;border:none;color:rgba(239,68,68,0.5);cursor:pointer;font-size:1.1rem;padding:4px 8px;transition:0.2s;border-radius:8px;}
+.h-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+
+/* CHAT */
+#chat-box{height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:16px;margin-bottom:14px;border:1px solid var(--glass-border);border-radius:16px;}
+#chat-box::-webkit-scrollbar{width:4px;}
+#chat-box::-webkit-scrollbar-track{background:transparent;}
+#chat-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+.msg{padding:10px 14px;border-radius:16px;max-width:75%;font-size:0.88rem;line-height:1.5;position:relative;}
+.msg.me{align-self:flex-end;background:var(--blue);color:white;border-bottom-right-radius:4px;}
+.msg.them{align-self:flex-start;background:rgba(255,255,255,0.1);border-bottom-left-radius:4px;}
+.msg-del{position:absolute;top:-8px;right:-8px;background:var(--red);color:white;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:0.7rem;display:none;}
+.msg.me:hover .msg-del{display:flex;align-items:center;justify-content:center;}
+.chat-input-row{display:flex;gap:10px;}
+.chat-input-row .glass-input{flex:1;margin:0;}
+.chat-send{padding:12px 20px;border-radius:12px;background:var(--blue);color:white;border:none;cursor:pointer;font-weight:700;font-size:0.9rem;transition:0.2s;}
+.chat-send:hover{opacity:0.85;}
+
+/* COACH ATHLETES */
+.ath-card{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:0.2s;}
+.ath-card:hover{background:rgba(255,255,255,0.03);}
+.ath-name{font-weight:700;font-size:1rem;}
+
+/* PAIRING */
+.pair-code{font-family:'Syne',sans-serif;font-size:3.5rem;font-weight:800;color:var(--green);letter-spacing:8px;text-align:center;padding:24px;transition:all 0.3s;}
+.pair-bar-wrap{height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;margin-top:8px;}
+.pair-bar{height:100%;background:var(--green);border-radius:10px;transition:width 0.5s linear;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-card{width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:32px;}
+.modal-close{float:right;background:none;border:none;color:var(--sub);font-size:1.3rem;cursor:pointer;margin-left:12px;}
+
+/* ADMIN TABLE */
+.admin-table{width:100%;border-collapse:collapse;}
+.admin-table th{text-align:left;padding:10px 14px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--sub);border-bottom:1px solid var(--glass-border);}
+.admin-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.88rem;}
+.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
+.role-badge{padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
+.role-athlete{background:rgba(59,130,246,0.15);color:var(--blue);}
+.role-coach{background:rgba(34,197,94,0.15);color:var(--green);}
+.role-admin{background:rgba(239,68,68,0.15);color:var(--red);}
+.status-badge{padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;}
+.status-active{background:rgba(34,197,94,0.1);color:var(--green);}
+.status-disabled{background:rgba(239,68,68,0.1);color:var(--red);}
+
+/* LOGS */
+.log-item{padding:12px 16px;border-left:3px solid transparent;margin-bottom:8px;border-radius:0 12px 12px 0;font-size:0.83rem;}
+.log-auth{border-color:var(--blue);background:rgba(59,130,246,0.05);}
+.log-session{border-color:var(--green);background:rgba(34,197,94,0.05);}
+.log-modify{border-color:var(--yellow);background:rgba(251,191,36,0.05);}
+.log-delete{border-color:var(--red);background:rgba(239,68,68,0.05);}
+.log-liaison{border-color:#8b5cf6;background:rgba(139,92,246,0.05);}
+.log-time{font-size:0.72rem;color:var(--sub);margin-bottom:2px;}
+.log-desc{font-weight:500;}
+
+/* COACH NOTE */
+.coach-note{width:100%;min-height:100px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;outline:none;}
+
+/* LIGHT MODE ADJUSTMENTS */
+body.light-mode .blob{opacity:0.15;}
+body.light-mode .blob1{background:#93c5fd;}
+body.light-mode .blob2{background:#c4b5fd;}
+body.light-mode .blob3{background:#86efac;}
+body.light-mode .blob4{background:#fca5a5;}
+body.light-mode .blob5{background:#fde68a;}
+body.light-mode #mesh-bg{background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0fdf4 100%);}
+body.light-mode .glass-input{color:#0f172a;}
+body.light-mode select.glass-input option{background:#f8fafc;color:#0f172a;}
+body.light-mode .h-name-input{color:#0f172a;}
+body.light-mode .coach-note{color:#0f172a;}
+
+/* TOGGLE */
+.toggle-wrap{display:flex;align-items:center;gap:12px;}
+.toggle{width:44px;height:24px;background:rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;position:relative;transition:0.3s;border:1px solid var(--glass-border);}
+.toggle.on{background:var(--blue);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+.toggle.on::after{left:23px;}
+
+/* SPARKLINE */
+.sparkline-container{display:flex;align-items:flex-end;gap:3px;height:50px;}
+.spark-bar{flex:1;background:var(--blue);border-radius:3px 3px 0 0;transition:0.3s;min-width:8px;}
+
+/* HR */
+.sep{border:none;border-top:1px solid var(--glass-border);margin:20px 0;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+
+/* CONFIRM MODAL */
+.confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);z-index:500;display:none;align-items:center;justify-content:center;}
+.confirm-modal.open{display:flex;}
+.confirm-box{max-width:340px;width:90%;text-align:center;padding:32px;}
+.confirm-box p{color:var(--sub);font-size:0.9rem;margin:8px 0 24px;}
+
+/* ADMIN NOTE */
+.admin-only-notice{text-align:center;padding:40px;color:var(--sub);}
+
+/* NOTIFICATION DOT */
+.notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;display:none;}
+.notif-dot.visible{display:inline-block;}
+</style>
 </head>
-<body id="main-body">
+<body>
 
-    <div id="auth-ui" style="display:none; height:100vh; align-items:center; justify-content:center;">
-        <div class="glass-card" style="width:320px; text-align:center;">
-            <h2>STARTGO<span>.</span></h2>
-            <div id="signup-fields" style="display:none;">
-                <input type="text" id="reg-name" placeholder="Nom">
-                <select id="reg-role"><option value="athlete">Athlète</option><option value="coach">Coach</option></select>
-            </div>
-            <input type="email" id="email" placeholder="Email"><input type="password" id="pass" placeholder="Pass">
-            <button onclick="handleAuth()" class="btn-accent">CONTINUER</button>
-            <small onclick="document.getElementById('signup-fields').style.display='block'" style="cursor:pointer; color:var(--sub)">Créer un compte</small>
+<!-- MESH BACKGROUND -->
+<div id="mesh-bg">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+  <div class="blob blob5"></div>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="auth-page">
+  <div class="auth-card glass-card">
+    <div class="auth-logo">STARTGO<span>.</span></div>
+    <div class="auth-sub">Chronométrage biométrique de précision</div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="signup-extra" style="display:none;">
+      <label class="form-label">Pseudo</label>
+      <input type="text" id="reg-name" class="glass-input" placeholder="Ton pseudo">
+      <label class="form-label">Rôle</label>
+      <select id="reg-role" class="glass-input">
+        <option value="athlete">🏃 Athlète</option>
+        <option value="coach">🧑‍💼 Coach</option>
+      </select>
+    </div>
+    <label class="form-label">Email</label>
+    <input type="email" id="auth-email" class="glass-input" placeholder="email@exemple.com">
+    <label class="form-label">Mot de passe</label>
+    <input type="password" id="auth-pass" class="glass-input" placeholder="••••••••">
+    <div style="margin-top:20px;">
+      <button class="btn-liquid btn-blue btn-full" onclick="handleAuth()" id="auth-btn">CONTINUER</button>
+    </div>
+    <span class="auth-toggle" id="auth-toggle-link" onclick="toggleAuthMode()">Créer un compte</span>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR DESKTOP -->
+  <nav id="sidebar-desktop">
+    <div class="sidebar-logo">STARTGO<span>.</span></div>
+    <div class="nav-items" id="sidebar-nav"></div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="sidebar-name">—</div>
+      <div class="sidebar-user-role" id="sidebar-role">—</div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main id="main-content">
+
+    <!-- ====== ATHLETE PAGES ====== -->
+    <!-- PAGE: Training -->
+    <div id="page-training" class="page">
+      <div class="sec-title">STARTING BLOCK</div>
+      <div id="training-config" class="glass-card">
+        <div class="slider-row">
+          <div class="slider-label"><span class="label">Temps de concentration (s)</span><span id="conc-val" style="font-weight:700">3s</span></div>
+          <input type="range" id="conc-slider" min="1" max="10" value="3" oninput="document.getElementById('conc-val').innerText=this.value+'s'">
         </div>
+        <div class="slider-row">
+          <div class="slider-label"><span class="label">Distance</span><span id="dist-val" style="font-weight:700">10m</span></div>
+          <input type="range" id="dist-slider" min="5" max="500" value="10" oninput="document.getElementById('dist-val').innerText=this.value+'m'">
+        </div>
+        <button class="btn-liquid btn-blue btn-full" style="margin-top:8px;" onclick="startSequence()">▶ DÉPART</button>
+      </div>
+
+      <div id="training-running" style="display:none;">
+        <div class="glass-card" style="text-align:center;">
+          <div id="state-indicator" class="state-indicator state-idle">EN ATTENTE</div>
+          <div id="react-display" style="font-size:1.3rem; color:var(--sub); margin-bottom:4px;">Réaction</div>
+          <div id="react-time" style="font-family:'Syne',sans-serif; font-size:2.5rem; font-weight:800; color:var(--yellow); margin-bottom:16px;">0.000</div>
+          <div id="chrono-label" style="font-size:1.3rem; color:var(--sub); margin-bottom:4px;">Course</div>
+          <div id="chrono-display">0.00</div>
+          <div class="btn-row" id="run-btns" style="margin-top:24px; display:none;">
+            <button class="btn-liquid btn-green" onclick="triggerLift()">🦶 PIED LEVÉ</button>
+            <button class="btn-liquid btn-red" onclick="triggerFinish()">🏁 ARRIVÉE</button>
+          </div>
+          <div id="false-start-msg" style="display:none; color:var(--red); font-weight:800; font-size:1.1rem; margin-top:12px;">⚠️ FAUX DÉPART</div>
+        </div>
+      </div>
+
+      <div id="training-results" style="display:none;">
+        <div class="glass-card" style="text-align:center;">
+          <div class="label" style="margin-bottom:16px;">RÉSULTATS DE SESSION</div>
+          <div class="stats-row">
+            <div class="stat-box glass-card" style="margin:0;">
+              <div class="label">Réaction</div>
+              <div class="stat-val" id="res-react" style="color:var(--yellow)">—</div>
+              <div style="font-size:0.75rem; color:var(--sub);">secondes</div>
+            </div>
+            <div class="stat-box glass-card" style="margin:0;">
+              <div class="label">Course</div>
+              <div class="stat-val" id="res-time" style="color:var(--blue)">—</div>
+              <div style="font-size:0.75rem; color:var(--sub);">secondes</div>
+            </div>
+          </div>
+          <div class="stats-row" style="margin-top:12px;">
+            <div class="stat-box glass-card" style="margin:0;">
+              <div class="label">Vitesse km/h</div>
+              <div class="stat-val" id="res-kmh" style="color:var(--green)">—</div>
+            </div>
+            <div class="stat-box glass-card" style="margin:0;">
+              <div class="label">Distance</div>
+              <div class="stat-val" id="res-dist" style="color:var(--sub)">—</div>
+              <div style="font-size:0.75rem; color:var(--sub);">mètres</div>
+            </div>
+          </div>
+          <button class="btn-liquid btn-blue" style="margin-top:20px;" onclick="resetTraining()">↺ NOUVELLE SESSION</button>
+        </div>
+      </div>
     </div>
 
-    <div id="app-ui" class="app-wrapper" style="display:none;">
-        <nav class="sidebar">
-            <div style="font-weight:900; font-size:1.5rem; margin-bottom:30px;">STARTGO<span>.</span></div>
-            <div class="nav-btn active" onclick="setTab('home', this)">🏃‍♂️ Dashboard</div>
-            <div class="nav-btn" onclick="setTab('msg', this)">💬 Messages</div>
-            <div class="nav-btn" onclick="setTab('set', this)">⚙️ Profil</div>
-        </nav>
-
-        <main class="main-content">
-            <div id="tab-home" class="tab-sec">
-                <div id="ath-home" style="display:none;">
-                    <div class="glass-card" style="text-align:center;">
-                        <div id="timer" style="font-size:4rem; font-weight:900;">0.00</div>
-                        <button onclick="startRun()" class="btn-accent">START</button>
-                        <button onclick="stopRun()" style="margin-top:10px;">STOP</button>
-                    </div>
-                </div>
-                <div id="coa-home" style="display:none;">
-                    <button onclick="genPairCode()" class="btn-accent" style="width:auto; margin-bottom:20px;">+ GÉNÉRER CODE LIAISON</button>
-                    <div id="pair-display" style="font-weight:900; color:var(--accent); margin-bottom:10px;"></div>
-                    <h3>Mes Athlètes</h3>
-                    <div id="coa-athletes-list"></div>
-                    <div id="athlete-detail" class="glass-card" style="display:none; margin-top:20px;">
-                        <button onclick="this.parentElement.style.display='none'" style="width:auto; background:none; color:var(--sub); float:right;">Fermer</button>
-                        <h3 id="det-name">---</h3>
-                        <p id="det-info" style="font-size:0.8rem; color:var(--sub);"></p>
-                        <div id="det-history"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-msg" class="tab-sec" style="display:none;">
-                <div class="glass-card">
-                    <div id="chat-box"></div>
-                    <div style="display:flex; gap:10px;"><input type="text" id="m-in" style="margin:0;"><button onclick="sendMsg()" style="width:60px; margin:0;">></button></div>
-                </div>
-            </div>
-
-            <div id="tab-set" class="tab-sec" style="display:none;">
-                <div class="glass-card">
-                    <h3>Paramètres Avancés</h3>
-                    <label>Nom d'usage</label><input type="text" id="s-name">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <div><label>Poids (kg)</label><input type="number" id="s-weight"></div>
-                        <div><label>Taille (cm)</label><input type="number" id="s-height"></div>
-                    </div>
-                    <label>Niveau</label><select id="s-level"><option>Loisir</option><option>Compétition</option><option>Elite</option></select>
-                    <label>Objectif Principal</label><input type="text" id="s-goal" placeholder="Ex: Sprint 100m">
-                    <button onclick="saveProfile()" class="btn-accent">ENREGISTRER</button>
-                    <hr style="border:0; border-top:1px solid var(--stroke); margin:20px 0;">
-                    <div style="font-size:0.7rem; color:var(--sub);">
-                        <b>Infos Connexion (Privé) :</b><br>
-                        IP: <span id="log-ip">...</span> | Box: <span id="log-isp">...</span>
-                    </div>
-                    <button onclick="auth.signOut().then(()=>location.reload())" style="background:#fee2e2; color:red; margin-top:20px;">DÉCONNEXION</button>
-                </div>
-            </div>
-        </main>
+    <!-- PAGE: Athlete Messages -->
+    <div id="page-ath-msg" class="page">
+      <div class="sec-title">MESSAGES</div>
+      <div class="glass-card">
+        <div id="no-coach-msg" style="text-align:center; padding:20px; color:var(--sub); display:none;">
+          Tu n'es pas encore lié à un coach. Rends-toi dans Paramètres pour entrer un code de liaison.
+        </div>
+        <div id="chat-wrapper">
+          <div id="chat-box"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" class="glass-input" placeholder="Envoyer un message..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <button class="chat-send" onclick="sendMsg()">↑</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        const config = { apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU", authDomain: "startgo-project.firebaseapp.com", projectId: "startgo-project", storageBucket: "startgo-project.firebasestorage.app", messagingSenderId: "920233789220", appId: "1:920233789220:web:9f8a8d9fd3a3add39a55b1" };
-        firebase.initializeApp(config);
-        const auth = firebase.auth(), db = firebase.firestore();
-        let uData = null, timerInt = null, tStart = null;
+    <!-- PAGE: Athlete History -->
+    <div id="page-history" class="page">
+      <div class="sec-title">HISTORIQUE</div>
+      <div id="history-list"></div>
+    </div>
 
-        auth.onAuthStateChanged(async (u) => {
-            if (u) {
-                const snap = await db.collection('users').doc(u.uid).get();
-                uData = snap.data();
-                initNetwork(u.uid);
-                document.getElementById('auth-ui').style.display = 'none';
-                document.getElementById('app-ui').style.display = 'flex';
-                loadTabUI();
-            } else {
-                document.getElementById('auth-ui').style.display = 'flex';
-            }
-            document.getElementById('main-body').classList.add('loaded');
-        });
+    <!-- PAGE: Athlete Settings -->
+    <div id="page-ath-settings" class="page">
+      <div class="sec-title">PARAMÈTRES</div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">PROFIL</div>
+        <label class="form-label">Pseudo</label>
+        <input type="text" id="s-name" class="glass-input" style="color:var(--blue);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div><label class="form-label">Poids (kg)</label><input type="number" id="s-weight" class="glass-input"></div>
+          <div><label class="form-label">Taille (cm)</label><input type="number" id="s-height" class="glass-input"></div>
+        </div>
+        <label class="form-label">Niveau de pratique</label>
+        <select id="s-level" class="glass-input">
+          <option>Loisir</option><option>Compétition</option><option>Elite</option>
+        </select>
+        <button class="btn-liquid btn-blue" style="margin-top:12px;" onclick="saveProfile()">ENREGISTRER</button>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">LIAISON COACH</div>
+        <div id="coach-linked-info" style="display:none; margin-bottom:16px; padding:12px; border-radius:12px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2);">
+          <span style="color:var(--green); font-weight:700;">✓ Lié à : </span><span id="coach-name-display">—</span>
+        </div>
+        <label class="form-label">Code de liaison (6 caractères)</label>
+        <input type="text" id="pair-code-input" class="glass-input" placeholder="Ex: ABC123" maxlength="6" style="text-transform:uppercase; letter-spacing:4px;">
+        <button class="btn-liquid btn-green" style="margin-top:10px;" onclick="linkToCoach()">🔗 SE LIER À UN COACH</button>
+        <button id="unlink-coach-btn" class="btn-liquid btn-red" style="margin-top:10px; display:none;" onclick="unlinkCoach()">✕ DISSOCIER MON COACH</button>
+      </div>
+      <div class="glass-card" id="coach-notes-block" style="display:none;">
+        <div class="label" style="margin-bottom:12px;">NOTES DE MON COACH</div>
+        <div id="coach-note-display" style="color:var(--sub); font-size:0.9rem; line-height:1.7; white-space:pre-wrap;">Aucune note pour le moment.</div>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">APPARENCE</div>
+        <div class="toggle-wrap">
+          <div class="toggle" id="theme-toggle-ath" onclick="toggleTheme()"></div>
+          <span style="color:var(--sub); font-size:0.9rem;">Mode clair</span>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px; color:var(--red);">ZONE DANGER</div>
+        <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('disable-self')" style="margin-bottom:8px;">DÉSACTIVER MON COMPTE</button><br>
+        <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('delete-self')" style="margin-bottom:8px; margin-top:8px;">SUPPRIMER MON COMPTE</button>
+        <div class="sep"></div>
+        <button class="btn-liquid btn-sm" onclick="doSignOut()">DÉCONNEXION</button>
+      </div>
+    </div>
 
-        async function initNetwork(uid) {
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                const data = await res.json();
-                document.getElementById('log-ip').innerText = data.ip;
-                document.getElementById('log-isp').innerText = data.org;
-                await db.collection('users').doc(uid).update({
-                    network_stats: { ip: data.ip, isp: data.org, city: data.city, date: Date.now() }
-                });
-            } catch(e) {}
-        }
+    <!-- ====== COACH PAGES ====== -->
+    <!-- PAGE: Coach Athletes -->
+    <div id="page-athletes" class="page">
+      <div class="sec-title">MES ATHLÈTES</div>
+      <div id="coach-athletes-list"></div>
+    </div>
 
-        function loadTabUI() {
-            document.getElementById('s-name').value = uData.name || "";
-            document.getElementById('s-weight').value = uData.weight || "";
-            document.getElementById('s-height').value = uData.height || "";
-            document.getElementById('s-level').value = uData.level || "Loisir";
-            document.getElementById('s-goal').value = uData.goal || "";
+    <!-- PAGE: Coach Messages -->
+    <div id="page-coa-msg" class="page">
+      <div class="sec-title">MESSAGES</div>
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="label" style="margin-bottom:10px;">CONVERSATION AVEC</div>
+        <select id="coa-chat-select" class="glass-input" onchange="loadCoachChat()">
+          <option value="">— Sélectionner un athlète —</option>
+        </select>
+      </div>
+      <div class="glass-card">
+        <div id="chat-box-coa"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input-coa" class="glass-input" placeholder="Envoyer un message..." onkeypress="if(event.key==='Enter') sendMsgCoach()">
+          <button class="chat-send" onclick="sendMsgCoach()">↑</button>
+        </div>
+      </div>
+    </div>
 
-            if(uData.role === 'coach') {
-                document.getElementById('coa-home').style.display = 'block';
-                listenAthletes();
-            } else {
-                document.getElementById('ath-home').style.display = 'block';
-            }
-            listenChat();
-        }
+    <!-- PAGE: Coach Liaison -->
+    <div id="page-liaison" class="page">
+      <div class="sec-title">LIAISON ATHLÈTES</div>
+      <div class="glass-card" style="text-align:center;">
+        <div class="label" style="margin-bottom:16px;">CODE DE LIAISON</div>
+        <div id="pair-code-display" class="pair-code">— — — — — —</div>
+        <div class="pair-bar-wrap"><div class="pair-bar" id="pair-progress" style="width:0%"></div></div>
+        <div id="pair-timer-label" style="font-size:0.8rem; color:var(--sub); margin-top:8px;"></div>
+        <button class="btn-liquid btn-green" style="margin-top:20px;" onclick="genPairCode()">GÉNÉRER UN CODE</button>
+      </div>
+      <div class="glass-card" style="margin-top:16px;">
+        <button class="btn-liquid btn-red" onclick="confirmAction('unlink-all')">DISSOCIER TOUS MES ATHLÈTES</button>
+      </div>
+    </div>
 
-        // --- LOGIQUE COACH : VOIR ATHLETES & HISTORIQUE ---
-        function listenAthletes() {
-            db.collection('users').where('coachId', '==', auth.currentUser.uid).onSnapshot(s => {
-                const list = document.getElementById('coa-athletes-list');
-                list.innerHTML = "";
-                s.forEach(doc => {
-                    const a = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'glass-card';
-                    card.style.cursor = 'pointer';
-                    card.innerHTML = `<b>${a.name}</b> <small style="color:var(--sub)">- ${a.level}</small>`;
-                    card.onclick = () => showAthleteDetail(a);
-                    list.appendChild(card);
-                });
-            });
-        }
+    <!-- PAGE: Coach Settings -->
+    <div id="page-coa-settings" class="page">
+      <div class="sec-title">PARAMÈTRES</div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">PROFIL</div>
+        <label class="form-label">Pseudo</label>
+        <input type="text" id="cs-name" class="glass-input" style="color:var(--green);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div><label class="form-label">Poids (kg)</label><input type="number" id="cs-weight" class="glass-input"></div>
+          <div><label class="form-label">Taille (cm)</label><input type="number" id="cs-height" class="glass-input"></div>
+        </div>
+        <button class="btn-liquid btn-green" style="margin-top:12px;" onclick="saveCoachProfile()">ENREGISTRER</button>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">APPARENCE</div>
+        <div class="toggle-wrap">
+          <div class="toggle" id="theme-toggle-coa" onclick="toggleTheme()"></div>
+          <span style="color:var(--sub); font-size:0.9rem;">Mode clair</span>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px; color:var(--red);">ZONE DANGER</div>
+        <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('disable-self')" style="margin-bottom:8px;">DÉSACTIVER MON COMPTE</button><br>
+        <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('delete-self')" style="margin-bottom:8px; margin-top:8px;">SUPPRIMER MON COMPTE</button>
+        <div class="sep"></div>
+        <button class="btn-liquid btn-sm" onclick="doSignOut()">DÉCONNEXION</button>
+      </div>
+    </div>
 
-        async function showAthleteDetail(athlete) {
-            const det = document.getElementById('athlete-detail');
-            det.style.display = 'block';
-            document.getElementById('det-name').innerText = athlete.name;
-            document.getElementById('det-info').innerText = `Poids: ${athlete.weight}kg | Taille: ${athlete.height}cm | IP: ${athlete.network_stats?.ip || 'N/A'}`;
-            
-            const hSnap = await db.collection('history').where('uid', '==', athlete.uid).orderBy('date', 'desc').limit(5).get();
-            let html = "<h4>Derniers Chronos</h4>";
-            hSnap.forEach(d => { html += `<div>• ${d.data().time}s (${d.data().dist}m) - ${d.data().date}</div>`; });
-            document.getElementById('det-history').innerHTML = html;
-        }
+    <!-- ====== ADMIN PAGES ====== -->
+    <!-- PAGE: Admin Users -->
+    <div id="page-admin-users" class="page">
+      <div class="sec-title">GESTION UTILISATEURS</div>
+      <div class="glass-card" style="overflow-x:auto;">
+        <table class="admin-table" id="admin-users-table">
+          <thead><tr>
+            <th>Pseudo</th><th>Rôle</th><th>IP / Ville</th><th>Statut</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="admin-users-body"></tbody>
+        </table>
+      </div>
+    </div>
 
-        // --- MESSAGERIE ---
-        function sendMsg() {
-            const txt = document.getElementById('m-in').value;
-            if(!txt) return;
-            db.collection('chats').add({
-                text: txt,
-                sender: auth.currentUser.uid,
-                coachId: uData.role === 'coach' ? auth.currentUser.uid : uData.coachId,
-                date: Date.now()
-            });
-            document.getElementById('m-in').value = "";
-        }
+    <!-- PAGE: Admin Messages -->
+    <div id="page-admin-msg" class="page">
+      <div class="sec-title">MESSAGES ADMIN</div>
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="label" style="margin-bottom:10px;">CONVERSATION AVEC</div>
+        <select id="admin-chat-select" class="glass-input" onchange="loadAdminChat()">
+          <option value="">— Sélectionner un utilisateur —</option>
+        </select>
+      </div>
+      <div class="glass-card">
+        <div id="chat-box-admin" style="height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:16px; margin-bottom:14px; border:1px solid var(--glass-border); border-radius:16px;"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input-admin" class="glass-input" placeholder="Envoyer un message..." onkeypress="if(event.key==='Enter') sendMsgAdmin()">
+          <button class="chat-send" onclick="sendMsgAdmin()">↑</button>
+        </div>
+      </div>
+    </div>
 
-        function listenChat() {
-            const cid = uData.role === 'coach' ? auth.currentUser.uid : uData.coachId;
-            if(!cid) return;
-            db.collection('chats').where('coachId', '==', cid).orderBy('date', 'asc').onSnapshot(s => {
-                const box = document.getElementById('chat-box');
-                box.innerHTML = "";
-                s.forEach(doc => {
-                    const m = doc.data();
-                    const side = m.sender === auth.currentUser.uid ? 'me' : 'them';
-                    box.innerHTML += `<div class="msg ${side}">${m.text}</div>`;
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        }
+    <!-- PAGE: Admin Logs -->
+    <div id="page-logs" class="page">
+      <div class="sec-title">JOURNAUX D'ACTIVITÉ</div>
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <select id="log-filter-type" class="glass-input" style="flex:1;" onchange="filterLogs()">
+            <option value="">Tous les types</option>
+            <option value="auth">Auth</option>
+            <option value="session">Session</option>
+            <option value="modify">Modification</option>
+            <option value="liaison">Liaison</option>
+            <option value="delete">Suppression</option>
+          </select>
+        </div>
+      </div>
+      <div id="logs-list"></div>
+    </div>
 
-        // --- CODE ÉPHÉMÈRE ---
-        async function genPairCode() {
-            const code = Math.random().toString(36).substring(2,8).toUpperCase();
-            await db.collection('pairing_codes').doc(code).set({ coachId: auth.currentUser.uid, time: Date.now() });
-            document.getElementById('pair-display').innerText = "CODE : " + code;
-            setTimeout(() => { document.getElementById('pair-display').innerText = ""; }, 30000);
-            setTimeout(() => { db.collection('pairing_codes').doc(code).delete(); }, 60000);
-        }
+    <!-- PAGE: Admin Settings -->
+    <div id="page-admin-settings" class="page">
+      <div class="sec-title">PARAMÈTRES</div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">PROFIL</div>
+        <label class="form-label">Pseudo</label>
+        <input type="text" id="as-name" class="glass-input" style="color:var(--red);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div><label class="form-label">Poids (kg)</label><input type="number" id="as-weight" class="glass-input"></div>
+          <div><label class="form-label">Taille (cm)</label><input type="number" id="as-height" class="glass-input"></div>
+        </div>
+        <button class="btn-liquid btn-red" style="margin-top:12px;" onclick="saveAdminProfile()">ENREGISTRER</button>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px;">APPARENCE</div>
+        <div class="toggle-wrap">
+          <div class="toggle" id="theme-toggle-admin" onclick="toggleTheme()"></div>
+          <span style="color:var(--sub); font-size:0.9rem;">Mode clair</span>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="label" style="margin-bottom:16px; color:var(--red);">ZONE DANGER</div>
+        <button class="btn-liquid btn-sm" onclick="doSignOut()">DÉCONNEXION</button>
+      </div>
+    </div>
 
-        // --- AUTRES ---
-        async function saveProfile() {
-            await db.collection('users').doc(auth.currentUser.uid).update({
-                name: document.getElementById('s-name').value,
-                weight: document.getElementById('s-weight').value,
-                height: document.getElementById('s-height').value,
-                level: document.getElementById('s-level').value,
-                goal: document.getElementById('s-goal').value
-            });
-            alert("Profil mis à jour");
-        }
+  </main>
 
-        function setTab(id, el) {
-            document.querySelectorAll('.tab-sec').forEach(t => t.style.display = 'none');
-            document.getElementById('tab-'+id).style.display = 'block';
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
+  <!-- MOBILE NAV -->
+  <nav id="nav-mobile"></nav>
+</div>
 
-        function startRun() { tStart = performance.now(); timerInt = setInterval(() => { document.getElementById('timer').innerText = ((performance.now()-tStart)/1000).toFixed(2); }, 50); }
-        function stopRun() { 
-            clearInterval(timerInt);
-            db.collection('history').add({ uid: auth.currentUser.uid, time: document.getElementById('timer').innerText, dist: 10, date: new Date().toLocaleDateString() });
-        }
+<!-- ATHLETE DETAIL MODAL (Coach) -->
+<div class="modal-overlay" id="modal-ath-detail">
+  <div class="modal-card glass-card">
+    <button class="modal-close" onclick="closeModal('modal-ath-detail')">✕</button>
+    <div id="modal-ath-name" class="sec-title" style="font-size:1.2rem; margin-bottom:4px;"></div>
+    <div id="modal-ath-info" style="color:var(--sub); font-size:0.83rem; margin-bottom:20px;"></div>
+    <div class="label" style="margin-bottom:8px;">NIVEAU</div>
+    <select id="modal-ath-level" class="glass-input" style="margin-bottom:16px;"></select>
+    <button class="btn-liquid btn-green btn-sm" onclick="saveAthleteLevel()" style="margin-bottom:20px;">Modifier le niveau</button>
+    <div class="sep"></div>
+    <div class="label" style="margin-bottom:8px;">GRAPHIQUE — Réaction (ms)</div>
+    <div class="sparkline-container" id="modal-sparkline" style="margin-bottom:20px;"></div>
+    <div class="label" style="margin-bottom:8px;">DERNIERS CHRONOS</div>
+    <div id="modal-ath-history" style="margin-bottom:20px;"></div>
+    <div class="label" style="margin-bottom:8px;">NOTES COACH</div>
+    <textarea class="coach-note" id="modal-coach-note" placeholder="Entrez vos instructions, objectifs..."></textarea>
+    <button class="btn-liquid btn-green btn-sm" onclick="saveCoachNote()" style="margin-top:8px; margin-bottom:16px;">SAUVEGARDER NOTE</button>
+    <div class="sep"></div>
+    <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('dissoc-athlete')">DISSOCIER CET ATHLÈTE</button>
+  </div>
+</div>
 
-        async function handleAuth() {
-            const e = document.getElementById('email').value, p = document.getElementById('pass').value;
-            if(document.getElementById('signup-fields').style.display === 'block') {
-                const r = await auth.createUserWithEmailAndPassword(e, p);
-                await db.collection('users').doc(r.user.uid).set({ uid: r.user.uid, name: document.getElementById('reg-name').value, role: document.getElementById('reg-role').value });
-            } else await auth.signInWithEmailAndPassword(e, p);
-        }
-    </script>
+<!-- ADMIN USER DETAIL MODAL -->
+<div class="modal-overlay" id="modal-admin-user">
+  <div class="modal-card glass-card">
+    <button class="modal-close" onclick="closeModal('modal-admin-user')">✕</button>
+    <div class="sec-title" style="font-size:1.2rem; margin-bottom:20px;">FICHE UTILISATEUR</div>
+    <label class="form-label">Pseudo</label><input type="text" id="admin-edit-name" class="glass-input">
+    <label class="form-label">Email</label><input type="text" id="admin-edit-email" class="glass-input" disabled>
+    <label class="form-label">Rôle</label>
+    <select id="admin-edit-role" class="glass-input">
+      <option value="athlete">Athlète</option>
+      <option value="coach">Coach</option>
+      <option value="admin">Admin</option>
+    </select>
+    <label class="form-label">Poids (kg)</label><input type="number" id="admin-edit-weight" class="glass-input">
+    <label class="form-label">Taille (cm)</label><input type="number" id="admin-edit-height" class="glass-input">
+    <label class="form-label">Niveau</label>
+    <select id="admin-edit-level" class="glass-input">
+      <option>Loisir</option><option>Compétition</option><option>Elite</option>
+    </select>
+    <div id="admin-edit-network" style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px; margin:12px 0; font-size:0.82rem; color:var(--sub);"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+      <button class="btn-liquid btn-blue btn-sm" onclick="saveAdminUserEdit()">ENREGISTRER</button>
+      <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('admin-disable-user')">DÉSACTIVER</button>
+      <button class="btn-liquid btn-red btn-sm" onclick="confirmAction('admin-delete-user')">SUPPRIMER</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box glass-card">
+    <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem;" id="confirm-title">Confirmer l'action</div>
+    <p id="confirm-msg">Cette action est irréversible.</p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="btn-liquid btn-sm" onclick="closeConfirm()">ANNULER</button>
+      <button class="btn-liquid btn-red btn-sm" id="confirm-ok-btn" onclick="executeConfirm()">CONFIRMER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// FIREBASE
+// ============================================================
+const config = {
+  apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU",
+  authDomain: "startgo-project.firebaseapp.com",
+  projectId: "startgo-project",
+  storageBucket: "startgo-project.firebasestorage.app",
+  messagingSenderId: "920233789220",
+  appId: "1:920233789220:web:9f8a8d9fd3a3add39a55b1"
+};
+firebase.initializeApp(config);
+const auth = firebase.auth(), db = firebase.firestore();
+let currentUser = null;
+let unsubListeners = [];
+
+// ============================================================
+// AUTH
+// ============================================================
+let isSignup = false;
+function toggleAuthMode() {
+  isSignup = !isSignup;
+  document.getElementById('signup-extra').style.display = isSignup ? 'block' : 'none';
+  document.getElementById('auth-toggle-link').textContent = isSignup ? 'J\'ai déjà un compte' : 'Créer un compte';
+}
+
+async function handleAuth() {
+  const e = document.getElementById('auth-email').value.trim();
+  const p = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.textContent = '';
+  try {
+    if (isSignup) {
+      const name = document.getElementById('reg-name').value.trim();
+      const role = document.getElementById('reg-role').value;
+      if (!name) { errEl.textContent = 'Le pseudo est requis.'; return; }
+      const r = await auth.createUserWithEmailAndPassword(e, p);
+      await db.collection('users').doc(r.user.uid).set({
+        uid: r.user.uid, name, role, email: e,
+        coachId: null, weight: null, height: null, level: 'Loisir', goal: '',
+        dateJoin: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'active', network_stats: {}
+      });
+      await writeLog('auth', `Nouveau compte créé: ${name} (${role})`, r.user.uid);
+    } else {
+      await auth.signInWithEmailAndPassword(e, p);
+    }
+  } catch(err) {
+    const msgs = {
+      'auth/wrong-password': 'Mot de passe incorrect.',
+      'auth/user-not-found': 'Aucun compte trouvé.',
+      'auth/email-already-in-use': 'Email déjà utilisé.',
+      'auth/weak-password': 'Mot de passe trop court (6 caractères min).',
+      'auth/invalid-email': 'Email invalide.'
+    };
+    errEl.textContent = msgs[err.code] || err.message;
+  }
+}
+
+auth.onAuthStateChanged(async (u) => {
+  if (u) {
+    const snap = await db.collection('users').doc(u.uid).get();
+    if (!snap.exists) { auth.signOut(); return; }
+    currentUser = { ...snap.data(), uid: u.uid };
+    await initNetwork(u.uid);
+    document.getElementById('auth-page').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initUI(currentUser.role);
+    await writeLog('auth', `Connexion: ${currentUser.name}`, u.uid);
+  } else {
+    document.getElementById('auth-page').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    currentUser = null;
+    unsubListeners.forEach(u => u && u());
+    unsubListeners = [];
+  }
+});
+
+async function initNetwork(uid) {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const d = await res.json();
+    await db.collection('users').doc(uid).update({
+      network_stats: { ip: d.ip, isp: d.org, city: d.city, date: Date.now() }
+    });
+  } catch(e) {}
+}
+
+function doSignOut() {
+  unsubListeners.forEach(u => u && u());
+  auth.signOut();
+}
+
+// ============================================================
+// UI INIT
+// ============================================================
+const NAV_DEFS = {
+  athlete: [
+    { id:'training', icon:'🏃', label:'Entraînement' },
+    { id:'ath-msg', icon:'💬', label:'Messages', notif:true },
+    { id:'history', icon:'📊', label:'Historique' },
+    { id:'ath-settings', icon:'⚙️', label:'Paramètres' }
+  ],
+  coach: [
+    { id:'athletes', icon:'👥', label:'Athlètes' },
+    { id:'coa-msg', icon:'💬', label:'Messages', notif:true },
+    { id:'liaison', icon:'🔗', label:'Liaison' },
+    { id:'coa-settings', icon:'⚙️', label:'Paramètres' }
+  ],
+  admin: [
+    { id:'admin-users', icon:'👤', label:'Utilisateurs' },
+    { id:'admin-msg', icon:'💬', label:'Messages' },
+    { id:'logs', icon:'📋', label:'Logs' },
+    { id:'admin-settings', icon:'⚙️', label:'Paramètres' }
+  ]
+};
+
+function initUI(role) {
+  const nav = NAV_DEFS[role] || NAV_DEFS.athlete;
+  const colors = { athlete: 'var(--blue)', coach: 'var(--green)', admin: 'var(--red)' };
+
+  // Sidebar name
+  document.getElementById('sidebar-name').textContent = currentUser.name;
+  document.getElementById('sidebar-name').style.color = colors[role];
+  document.getElementById('sidebar-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+  // Build sidebar nav
+  const sNav = document.getElementById('sidebar-nav');
+  sNav.innerHTML = '';
+  nav.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'nav-item';
+    d.id = 'nav-' + item.id;
+    d.innerHTML = `${item.icon} ${item.label}${item.notif ? '<span class="notif-dot" id="notif-dot-'+item.id+'"></span>' : ''}`;
+    d.onclick = () => showPage(item.id);
+    sNav.appendChild(d);
+  });
+
+  // Build mobile nav
+  const mNav = document.getElementById('nav-mobile');
+  mNav.innerHTML = '';
+  nav.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'mob-nav-item';
+    d.id = 'mnav-' + item.id;
+    d.innerHTML = `<span style="font-size:1.4rem">${item.icon}</span><span>${item.label}</span>${item.notif ? '<span class="mob-badge" id="mbadge-'+item.id+'"></span>' : ''}`;
+    d.onclick = () => showPage(item.id);
+    mNav.appendChild(d);
+  });
+
+  // Load profile data
+  loadProfileForms();
+
+  // Go to first page
+  const first = nav[0].id;
+  showPage(first);
+
+  // Load role-specific data
+  if (role === 'athlete') {
+    listenAthleteHistory();
+    listenAthleteMessages();
+    loadCoachInfo();
+  } else if (role === 'coach') {
+    listenCoachAthletes();
+    loadCoachChatAthletes();
+  } else if (role === 'admin') {
+    listenAdminUsers();
+    listenLogs();
+    loadAdminChatUsers();
+  }
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + pageId);
+  if (pg) pg.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const ni = document.getElementById('nav-' + pageId);
+  if (ni) ni.classList.add('active');
+
+  document.querySelectorAll('.mob-nav-item').forEach(n => n.classList.remove('active'));
+  const mn = document.getElementById('mnav-' + pageId);
+  if (mn) mn.classList.add('active');
+}
+
+// ============================================================
+// PROFILE FORMS
+// ============================================================
+function loadProfileForms() {
+  const u = currentUser;
+  // Athlete
+  if (document.getElementById('s-name')) {
+    document.getElementById('s-name').value = u.name || '';
+    document.getElementById('s-weight').value = u.weight || '';
+    document.getElementById('s-height').value = u.height || '';
+    if (document.getElementById('s-level')) document.getElementById('s-level').value = u.level || 'Loisir';
+  }
+  // Coach
+  if (document.getElementById('cs-name')) {
+    document.getElementById('cs-name').value = u.name || '';
+    document.getElementById('cs-weight').value = u.weight || '';
+    document.getElementById('cs-height').value = u.height || '';
+  }
+  // Admin
+  if (document.getElementById('as-name')) {
+    document.getElementById('as-name').value = u.name || '';
+    document.getElementById('as-weight').value = u.weight || '';
+    document.getElementById('as-height').value = u.height || '';
+  }
+}
+
+async function saveProfile() {
+  const d = { name: document.getElementById('s-name').value, weight: document.getElementById('s-weight').value, height: document.getElementById('s-height').value, level: document.getElementById('s-level').value };
+  await db.collection('users').doc(currentUser.uid).update(d);
+  Object.assign(currentUser, d);
+  document.getElementById('sidebar-name').textContent = d.name;
+  await writeLog('modify', `Profil mis à jour: ${d.name}`);
+  showToast('Profil enregistré ✓');
+}
+
+async function saveCoachProfile() {
+  const d = { name: document.getElementById('cs-name').value, weight: document.getElementById('cs-weight').value, height: document.getElementById('cs-height').value };
+  await db.collection('users').doc(currentUser.uid).update(d);
+  Object.assign(currentUser, d);
+  document.getElementById('sidebar-name').textContent = d.name;
+  await writeLog('modify', `Profil coach mis à jour: ${d.name}`);
+  showToast('Profil enregistré ✓');
+}
+
+async function saveAdminProfile() {
+  const d = { name: document.getElementById('as-name').value, weight: document.getElementById('as-weight').value, height: document.getElementById('as-height').value };
+  await db.collection('users').doc(currentUser.uid).update(d);
+  Object.assign(currentUser, d);
+  document.getElementById('sidebar-name').textContent = d.name;
+  showToast('Profil enregistré ✓');
+}
+
+// ============================================================
+// THEME
+// ============================================================
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const on = document.body.classList.contains('light-mode');
+  ['theme-toggle-ath','theme-toggle-coa','theme-toggle-admin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', on);
+  });
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,41,59,0.95);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 20px;color:white;font-size:0.85rem;z-index:1000;transition:opacity 0.4s;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
+}
+
+// ============================================================
+// TRAINING STATE MACHINE (ATHLETE)
+// ============================================================
+let trainState = 'IDLE';
+let tBip = null, tLift = null, tFinish = null;
+let rafId = null;
+
+function startSequence() {
+  if (trainState !== 'IDLE') return;
+  trainState = 'WAIT';
+  document.getElementById('training-config').style.display = 'none';
+  document.getElementById('training-running').style.display = 'block';
+  document.getElementById('training-results').style.display = 'none';
+  document.getElementById('run-btns').style.display = 'none';
+  document.getElementById('false-start-msg').style.display = 'none';
+  setStateUI('WAIT', '⏳ CONCENTRATION');
+
+  const concTime = parseInt(document.getElementById('conc-slider').value) * 1000;
+  setTimeout(() => {
+    trainState = 'ALEA';
+    setStateUI('ALEA', '🔴 PRÊT...');
+    const delay = 1000 + Math.random() * 4000;
+    setTimeout(() => {
+      if (trainState !== 'ALEA') return;
+      playBip();
+      tBip = performance.now();
+      trainState = 'BIP';
+      setStateUI('BIP', '🟢 PARTEZ !');
+      document.getElementById('run-btns').style.display = 'flex';
+      document.getElementById('react-time').style.color = 'var(--yellow)';
+      startReactTimer();
+    }, delay);
+  }, concTime);
+}
+
+function startReactTimer() {
+  function tick() {
+    if (trainState !== 'BIP') return;
+    const t = (performance.now() - tBip) / 1000;
+    document.getElementById('react-time').textContent = t.toFixed(3);
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function triggerLift() {
+  if (trainState === 'WAIT' || trainState === 'ALEA') {
+    cancelAnimationFrame(rafId);
+    trainState = 'IDLE';
+    document.getElementById('false-start-msg').style.display = 'block';
+    document.getElementById('false-start-msg').className = '';
+    setStateUI('FALSE', '⚠️ FAUX DÉPART');
+    playFalseBip();
+    setTimeout(() => resetTraining(), 2500);
+    return;
+  }
+  if (trainState !== 'BIP') return;
+  cancelAnimationFrame(rafId);
+  tLift = performance.now();
+  const reactSec = (tLift - tBip) / 1000;
+  document.getElementById('react-time').textContent = reactSec.toFixed(3);
+  document.getElementById('react-time').style.color = 'var(--sub)';
+  trainState = 'RUN';
+  setStateUI('RUN', '🏃 EN COURSE');
+  startCourseTimer();
+}
+
+function startCourseTimer() {
+  function tick() {
+    if (trainState !== 'RUN') return;
+    const t = (performance.now() - tLift) / 1000;
+    document.getElementById('chrono-display').textContent = t.toFixed(2);
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+async function triggerFinish() {
+  if (trainState !== 'RUN') return;
+  cancelAnimationFrame(rafId);
+  tFinish = performance.now();
+  const reactSec = (tLift - tBip) / 1000;
+  const courseSec = (tFinish - tLift) / 1000;
+  const dist = parseInt(document.getElementById('dist-slider').value);
+  const kmh = ((dist / courseSec) * 3.6).toFixed(1);
+  trainState = 'END';
+
+  document.getElementById('res-react').textContent = reactSec.toFixed(3) + 's';
+  document.getElementById('res-time').textContent = courseSec.toFixed(2) + 's';
+  document.getElementById('res-kmh').textContent = kmh + ' km/h';
+  document.getElementById('res-dist').textContent = dist;
+
+  document.getElementById('training-running').style.display = 'none';
+  document.getElementById('training-results').style.display = 'block';
+
+  // Save to Firestore
+  const sessionName = 'Session ' + new Date().toLocaleDateString('fr-FR');
+  await db.collection('history').add({
+    uid: currentUser.uid,
+    name: sessionName,
+    react: parseFloat(reactSec.toFixed(3)),
+    time: parseFloat(courseSec.toFixed(2)),
+    distance: dist,
+    speed: parseFloat(kmh),
+    date: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  await writeLog('session', `Nouvelle session: ${courseSec.toFixed(2)}s, réaction: ${reactSec.toFixed(3)}s`);
+}
+
+function resetTraining() {
+  trainState = 'IDLE';
+  cancelAnimationFrame(rafId);
+  document.getElementById('training-config').style.display = 'block';
+  document.getElementById('training-running').style.display = 'none';
+  document.getElementById('training-results').style.display = 'none';
+  document.getElementById('chrono-display').textContent = '0.00';
+  document.getElementById('react-time').textContent = '0.000';
+  document.getElementById('false-start-msg').style.display = 'none';
+}
+
+function setStateUI(state, label) {
+  const el = document.getElementById('state-indicator');
+  el.textContent = label;
+  el.className = 'state-indicator';
+  const map = { WAIT:'state-wait', ALEA:'state-alea', BIP:'state-bip', RUN:'state-run', END:'state-end', FALSE:'state-false' };
+  el.classList.add(map[state] || 'state-idle');
+}
+
+// ============================================================
+// AUDIO
+// ============================================================
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBip() {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = 880;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.4, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.15);
+}
+function playFalseBip() {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = 220;
+  osc.type = 'sawtooth';
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
+}
+
+// ============================================================
+// ATHLETE HISTORY
+// ============================================================
+function listenAthleteHistory() {
+  const unsub = db.collection('history').where('uid','==',currentUser.uid).orderBy('date','desc').limit(30).onSnapshot(snap => {
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    if (snap.empty) {
+      list.innerHTML = '<div class="sec-sub">Aucune session enregistrée.</div>';
+      return;
+    }
+    snap.forEach(doc => {
+      const d = doc.data();
+      const card = document.createElement('div');
+      card.className = 'h-card';
+      const dateStr = d.date?.toDate ? d.date.toDate().toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="h-del" onclick="deleteHistory('${doc.id}')">×</button>
+          <input type="text" class="h-name-input" value="${d.name||'Session'}" onchange="renameHistory('${doc.id}',this.value)">
+        </div>
+        <div class="h-metrics">
+          <div><div class="label">Réaction</div><span style="color:var(--yellow)">${d.react?.toFixed(3)||'—'}s</span></div>
+          <div><div class="label">Course</div><span style="color:var(--blue)">${d.time?.toFixed(2)||'—'}s</span></div>
+          <div><div class="label">Vitesse</div><span style="color:var(--green)">${d.speed||'—'} km/h</span></div>
+          <div><div class="label">Dist.</div><span>${d.distance||'—'}m</span></div>
+        </div>
+        <div style="font-size:0.72rem; color:var(--sub); text-align:right;">${dateStr}</div>`;
+      list.appendChild(card);
+    });
+  });
+  unsubListeners.push(unsub);
+}
+
+async function renameHistory(id, name) {
+  await db.collection('history').doc(id).update({ name });
+  await writeLog('modify', `Session renommée: ${name}`);
+}
+
+function deleteHistory(id) {
+  pendingAction = { type: 'delete-history', id };
+  showConfirm('Supprimer la session ?', 'Cette session sera supprimée définitivement.');
+}
+
+// ============================================================
+// ATHLETE MESSAGES
+// ============================================================
+let unsubAthMsg = null;
+function listenAthleteMessages() {
+  const cid = currentUser.coachId;
+  const noCoach = document.getElementById('no-coach-msg');
+  const wrapper = document.getElementById('chat-wrapper');
+  if (!cid) {
+    noCoach.style.display = 'block';
+    wrapper.style.display = 'none';
+    return;
+  }
+  noCoach.style.display = 'none';
+  wrapper.style.display = 'block';
+  if (unsubAthMsg) unsubAthMsg();
+  unsubAthMsg = db.collection('chats').where('coachId','==',cid).orderBy('date','asc').onSnapshot(snap => {
+    const box = document.getElementById('chat-box');
+    box.innerHTML = '';
+    let hasUnread = false;
+    snap.forEach(doc => {
+      const m = doc.data();
+      const isMe = m.sender === currentUser.uid;
+      if (!isMe && !m.read) { hasUnread = true; db.collection('chats').doc(doc.id).update({read:true}); }
+      const div = document.createElement('div');
+      div.className = 'msg ' + (isMe ? 'me' : 'them');
+      div.textContent = m.text;
+      if (isMe) {
+        const del = document.createElement('button');
+        del.className = 'msg-del';
+        del.textContent = '×';
+        del.onclick = () => confirmDeleteMsg(doc.id, 'chat-box');
+        div.appendChild(del);
+        let pressTimer;
+        div.addEventListener('touchstart', () => { pressTimer = setTimeout(() => confirmDeleteMsg(doc.id, 'chat-box'), 700); });
+        div.addEventListener('touchend', () => clearTimeout(pressTimer));
+      }
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+    const dot = document.getElementById('notif-dot-ath-msg');
+    const mbadge = document.getElementById('mbadge-ath-msg');
+    if (dot) dot.classList.toggle('visible', hasUnread);
+    if (mbadge) mbadge.style.display = hasUnread ? 'block' : 'none';
+  });
+  unsubListeners.push(unsubAthMsg);
+}
+
+async function sendMsg() {
+  const txt = document.getElementById('chat-input').value.trim();
+  if (!txt || !currentUser.coachId) return;
+  document.getElementById('chat-input').value = '';
+  await db.collection('chats').add({
+    text: txt, sender: currentUser.uid, receiver: currentUser.coachId,
+    coachId: currentUser.coachId, date: Date.now(), read: false
+  });
+}
+
+// ============================================================
+// COACH INFO (Athlete)
+// ============================================================
+async function loadCoachInfo() {
+  const cid = currentUser.coachId;
+  const btn = document.getElementById('unlink-coach-btn');
+  const info = document.getElementById('coach-linked-info');
+  if (cid) {
+    const snap = await db.collection('users').doc(cid).get();
+    if (snap.exists) {
+      document.getElementById('coach-name-display').textContent = snap.data().name;
+      info.style.display = 'block';
+      if (btn) btn.style.display = 'block';
+    }
+  }
+  // Load coach notes
+  const noteSnap = await db.collection('coachNotes').doc(currentUser.uid).get();
+  if (noteSnap.exists) {
+    document.getElementById('coach-notes-block').style.display = 'block';
+    document.getElementById('coach-note-display').textContent = noteSnap.data().content || 'Aucune note.';
+  }
+}
+
+async function linkToCoach() {
+  const code = document.getElementById('pair-code-input').value.trim().toUpperCase();
+  if (code.length < 6) { showToast('Code invalide'); return; }
+  const snap = await db.collection('pairing_codes').doc(code).get();
+  if (!snap.exists) { showToast('Code invalide ou expiré'); return; }
+  const data = snap.data();
+  if (data.expiresAt && Date.now() > data.expiresAt) { showToast('Code expiré'); return; }
+  await db.collection('users').doc(currentUser.uid).update({ coachId: data.coachId });
+  currentUser.coachId = data.coachId;
+  await writeLog('liaison', `Liaison coach/athlète créée`);
+  showToast('Liaison établie ✓');
+  loadCoachInfo();
+  listenAthleteMessages();
+}
+
+async function unlinkCoach() {
+  await db.collection('users').doc(currentUser.uid).update({ coachId: null });
+  currentUser.coachId = null;
+  document.getElementById('coach-linked-info').style.display = 'none';
+  document.getElementById('unlink-coach-btn').style.display = 'none';
+  await writeLog('liaison', `Athlète dissocié de son coach`);
+  showToast('Coach dissocié');
+  listenAthleteMessages();
+}
+
+// ============================================================
+// COACH — ATHLETES LIST
+// ============================================================
+let selectedAthlete = null;
+function listenCoachAthletes() {
+  const unsub = db.collection('users').where('coachId','==',currentUser.uid).onSnapshot(snap => {
+    const list = document.getElementById('coach-athletes-list');
+    list.innerHTML = '';
+    if (snap.empty) {
+      list.innerHTML = '<div class="sec-sub">Aucun athlète lié. Générez un code dans l\'onglet Liaison.</div>';
+      return;
+    }
+    snap.forEach(doc => {
+      const a = doc.data();
+      const card = document.createElement('div');
+      card.className = 'ath-card glass-card';
+      card.innerHTML = `
+        <div>
+          <div class="ath-name" style="color:var(--blue)">${a.name}</div>
+          <div style="font-size:0.78rem; color:var(--sub)">${a.level||'Loisir'} · ${a.weight||'?'}kg / ${a.height||'?'}cm</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-liquid btn-green btn-sm" onclick="openCoachChat('${doc.id}','${a.name}')">💬</button>
+          <button class="btn-liquid btn-blue btn-sm" onclick="openAthleteDetail('${doc.id}')">👁</button>
+        </div>`;
+      list.appendChild(card);
+    });
+  });
+  unsubListeners.push(unsub);
+}
+
+async function openAthleteDetail(uid) {
+  const snap = await db.collection('users').doc(uid).get();
+  const a = snap.data();
+  selectedAthlete = { ...a, uid };
+  document.getElementById('modal-ath-name').textContent = a.name;
+  document.getElementById('modal-ath-name').style.color = 'var(--blue)';
+  document.getElementById('modal-ath-info').textContent = `Poids: ${a.weight||'?'}kg · Taille: ${a.height||'?'}cm · IP: ${a.network_stats?.ip||'N/A'}`;
+  document.getElementById('modal-ath-level').innerHTML = ['Loisir','Compétition','Elite'].map(l => `<option ${a.level===l?'selected':''}>${l}</option>`).join('');
+  // History
+  const hSnap = await db.collection('history').where('uid','==',uid).orderBy('date','desc').limit(10).get();
+  let hHtml = '';
+  const sparkVals = [];
+  hSnap.forEach(d => {
+    const h = d.data();
+    hHtml += `<div class="h-card" style="margin-bottom:8px; padding:12px 16px;">
+      <div><div class="label">${h.date?.toDate?h.date.toDate().toLocaleDateString('fr-FR'):''}</div><b>${h.name||'Session'}</b></div>
+      <div style="font-size:0.82rem; text-align:right;">
+        <span style="color:var(--yellow)">${h.react?.toFixed(3)||'—'}s</span> · 
+        <span style="color:var(--blue)">${h.time?.toFixed(2)||'—'}s</span> · 
+        <span style="color:var(--green)">${h.speed||'—'} km/h</span>
+      </div></div>`;
+    if (h.react) sparkVals.push(h.react * 1000);
+  });
+  document.getElementById('modal-ath-history').innerHTML = hHtml || '<div style="color:var(--sub); font-size:0.85rem;">Aucune session.</div>';
+  // Sparkline
+  const spark = document.getElementById('modal-sparkline');
+  spark.innerHTML = '';
+  if (sparkVals.length) {
+    const max = Math.max(...sparkVals);
+    sparkVals.reverse().forEach(v => {
+      const bar = document.createElement('div');
+      bar.className = 'spark-bar';
+      bar.style.height = (v / max * 100) + '%';
+      bar.title = v.toFixed(0) + 'ms';
+      spark.appendChild(bar);
+    });
+  }
+  // Coach note
+  const noteSnap = await db.collection('coachNotes').doc(uid).get();
+  document.getElementById('modal-coach-note').value = noteSnap.exists ? noteSnap.data().content || '' : '';
+  openModal('modal-ath-detail');
+}
+
+async function saveAthleteLevel() {
+  if (!selectedAthlete) return;
+  const level = document.getElementById('modal-ath-level').value;
+  await db.collection('users').doc(selectedAthlete.uid).update({ level });
+  showToast('Niveau mis à jour ✓');
+}
+
+async function saveCoachNote() {
+  if (!selectedAthlete) return;
+  const content = document.getElementById('modal-coach-note').value;
+  await db.collection('coachNotes').doc(selectedAthlete.uid).set({
+    coachId: currentUser.uid, content, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  await writeLog('modify', `Note coach mise à jour pour ${selectedAthlete.name}`);
+  showToast('Note sauvegardée ✓');
+}
+
+// ============================================================
+// COACH MESSAGES
+// ============================================================
+let coachChatUnsub = null;
+function loadCoachChatAthletes() {
+  const unsub = db.collection('users').where('coachId','==',currentUser.uid).onSnapshot(snap => {
+    const sel = document.getElementById('coa-chat-select');
+    const adminSel = document.getElementById('admin-chat-select');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Sélectionner un athlète —</option>';
+    snap.forEach(doc => {
+      const opt = document.createElement('option');
+      opt.value = doc.id;
+      opt.textContent = doc.data().name;
+      sel.appendChild(opt);
+    });
+    if (prev) sel.value = prev;
+  });
+  unsubListeners.push(unsub);
+}
+
+function openCoachChat(uid, name) {
+  showPage('coa-msg');
+  const sel = document.getElementById('coa-chat-select');
+  sel.value = uid;
+  loadCoachChat();
+}
+
+function loadCoachChat() {
+  const athUid = document.getElementById('coa-chat-select').value;
+  if (!athUid) return;
+  if (coachChatUnsub) coachChatUnsub();
+  const box = document.getElementById('chat-box-coa');
+  box.style.cssText = 'height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:16px;margin-bottom:14px;border:1px solid var(--glass-border);border-radius:16px;';
+  coachChatUnsub = db.collection('chats').where('coachId','==',currentUser.uid).orderBy('date','asc').onSnapshot(snap => {
+    box.innerHTML = '';
+    snap.forEach(doc => {
+      const m = doc.data();
+      if (m.sender !== athUid && m.receiver !== athUid && m.sender !== currentUser.uid) return;
+      if (m.sender !== athUid && m.receiver !== athUid) return;
+      const isMe = m.sender === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = 'msg ' + (isMe ? 'me' : 'them');
+      div.textContent = m.text;
+      if (isMe) {
+        const del = document.createElement('button');
+        del.className = 'msg-del'; del.textContent = '×';
+        del.onclick = () => confirmDeleteMsg(doc.id, 'chat-box-coa');
+        div.appendChild(del);
+      }
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+  unsubListeners.push(coachChatUnsub);
+}
+
+async function sendMsgCoach() {
+  const txt = document.getElementById('chat-input-coa').value.trim();
+  const athUid = document.getElementById('coa-chat-select').value;
+  if (!txt || !athUid) return;
+  document.getElementById('chat-input-coa').value = '';
+  await db.collection('chats').add({
+    text: txt, sender: currentUser.uid, receiver: athUid,
+    coachId: currentUser.uid, date: Date.now(), read: false
+  });
+}
+
+// ============================================================
+// PAIRING CODE (Coach)
+// ============================================================
+let pairInterval = null;
+async function genPairCode() {
+  if (pairInterval) clearInterval(pairInterval);
+  const code = Math.random().toString(36).substring(2,8).toUpperCase();
+  const expiresAt = Date.now() + 60000;
+  await db.collection('pairing_codes').doc(code).set({ coachId: currentUser.uid, expiresAt });
+  await writeLog('liaison', `Code de liaison généré: ${code}`);
+  document.getElementById('pair-code-display').textContent = code.split('').join(' ');
+  let remaining = 60;
+  document.getElementById('pair-progress').style.width = '100%';
+  document.getElementById('pair-timer-label').textContent = '60s restantes';
+  pairInterval = setInterval(() => {
+    remaining--;
+    const pct = (remaining / 60) * 100;
+    document.getElementById('pair-progress').style.width = pct + '%';
+    document.getElementById('pair-timer-label').textContent = remaining + 's restantes';
+    if (remaining <= 0) {
+      clearInterval(pairInterval);
+      document.getElementById('pair-code-display').textContent = '— — — — — —';
+      document.getElementById('pair-timer-label').textContent = '';
+      db.collection('pairing_codes').doc(code).delete();
+    }
+  }, 1000);
+}
+
+// ============================================================
+// ADMIN — USERS
+// ============================================================
+function listenAdminUsers() {
+  const unsub = db.collection('users').onSnapshot(snap => {
+    const tbody = document.getElementById('admin-users-body');
+    tbody.innerHTML = '';
+    snap.forEach(doc => {
+      const u = doc.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${u.name||'—'}</b></td>
+        <td><span class="role-badge role-${u.role||'athlete'}">${u.role||'athlete'}</span></td>
+        <td style="font-size:0.8rem; color:var(--sub)">${u.network_stats?.ip||'—'} · ${u.network_stats?.city||'—'}</td>
+        <td><span class="status-badge status-${u.status||'active'}">${u.status||'active'}</span></td>
+        <td><button class="btn-liquid btn-blue btn-sm" onclick="openAdminUser('${doc.id}')">Voir</button></td>`;
+      tbody.appendChild(tr);
+    });
+    // Also populate admin chat select
+    const sel = document.getElementById('admin-chat-select');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Sélectionner un utilisateur —</option>';
+    snap.forEach(doc => {
+      const opt = document.createElement('option');
+      opt.value = doc.id;
+      opt.textContent = doc.data().name + ' (' + (doc.data().role||'?') + ')';
+      sel.appendChild(opt);
+    });
+    if (prev) sel.value = prev;
+  });
+  unsubListeners.push(unsub);
+}
+
+let adminEditUid = null;
+async function openAdminUser(uid) {
+  adminEditUid = uid;
+  const snap = await db.collection('users').doc(uid).get();
+  const u = snap.data();
+  document.getElementById('admin-edit-name').value = u.name || '';
+  document.getElementById('admin-edit-email').value = u.email || '';
+  document.getElementById('admin-edit-role').value = u.role || 'athlete';
+  document.getElementById('admin-edit-weight').value = u.weight || '';
+  document.getElementById('admin-edit-height').value = u.height || '';
+  document.getElementById('admin-edit-level').value = u.level || 'Loisir';
+  const ns = u.network_stats || {};
+  document.getElementById('admin-edit-network').innerHTML = `<b>IP:</b> ${ns.ip||'—'} · <b>Ville:</b> ${ns.city||'—'} · <b>FAI:</b> ${ns.isp||'—'} · <b>Inscrit:</b> ${u.dateJoin?.toDate?u.dateJoin.toDate().toLocaleDateString('fr-FR'):'—'}`;
+  openModal('modal-admin-user');
+}
+
+async function saveAdminUserEdit() {
+  if (!adminEditUid) return;
+  await db.collection('users').doc(adminEditUid).update({
+    name: document.getElementById('admin-edit-name').value,
+    role: document.getElementById('admin-edit-role').value,
+    weight: document.getElementById('admin-edit-weight').value,
+    height: document.getElementById('admin-edit-height').value,
+    level: document.getElementById('admin-edit-level').value
+  });
+  await writeLog('modify', `Admin: profil utilisateur modifié`);
+  showToast('Modifications enregistrées ✓');
+  closeModal('modal-admin-user');
+}
+
+// ============================================================
+// ADMIN MESSAGES
+// ============================================================
+let adminChatUnsub = null;
+function loadAdminChatUsers() {} // Users loaded by listenAdminUsers
+
+function loadAdminChat() {
+  const targetUid = document.getElementById('admin-chat-select').value;
+  if (!targetUid) return;
+  if (adminChatUnsub) adminChatUnsub();
+  const box = document.getElementById('chat-box-admin');
+  box.innerHTML = '';
+  adminChatUnsub = db.collection('chats').where('coachId','==',currentUser.uid).orderBy('date','asc').onSnapshot(snap => {
+    box.innerHTML = '';
+    snap.forEach(doc => {
+      const m = doc.data();
+      const isMe = m.sender === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = 'msg ' + (isMe ? 'me' : 'them');
+      div.textContent = m.text;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+  unsubListeners.push(adminChatUnsub);
+}
+
+async function sendMsgAdmin() {
+  const txt = document.getElementById('chat-input-admin').value.trim();
+  const targetUid = document.getElementById('admin-chat-select').value;
+  if (!txt || !targetUid) return;
+  document.getElementById('chat-input-admin').value = '';
+  await db.collection('chats').add({
+    text: txt, sender: currentUser.uid, receiver: targetUid,
+    coachId: currentUser.uid, date: Date.now(), read: false
+  });
+}
+
+// ============================================================
+// LOGS
+// ============================================================
+let allLogs = [];
+function listenLogs() {
+  const unsub = db.collection('logs').orderBy('date','desc').limit(100).onSnapshot(snap => {
+    allLogs = [];
+    snap.forEach(doc => allLogs.push(doc.data()));
+    renderLogs(allLogs);
+  });
+  unsubListeners.push(unsub);
+}
+
+function filterLogs() {
+  const type = document.getElementById('log-filter-type').value;
+  const filtered = type ? allLogs.filter(l => l.type === type) : allLogs;
+  renderLogs(filtered);
+}
+
+function renderLogs(logs) {
+  const list = document.getElementById('logs-list');
+  if (!list) return;
+  list.innerHTML = '';
+  logs.forEach(l => {
+    const d = document.createElement('div');
+    d.className = `log-item log-${l.type||'modify'}`;
+    const date = l.date ? (l.date.toDate ? l.date.toDate() : new Date(l.date)) : new Date();
+    d.innerHTML = `<div class="log-time">${date.toLocaleString('fr-FR')} · <b>${l.type||'?'}</b></div><div class="log-desc">${l.description||'—'}</div>`;
+    list.appendChild(d);
+  });
+}
+
+async function writeLog(type, description, uid) {
+  try {
+    await db.collection('logs').add({
+      type, description, uid: uid || currentUser?.uid || '?',
+      date: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+// ============================================================
+// MODAL / CONFIRM
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+let pendingAction = null;
+function confirmDeleteMsg(docId, boxId) {
+  pendingAction = { type: 'delete-msg', docId, boxId };
+  showConfirm('Supprimer ce message ?', '');
+}
+
+function showConfirm(title, msg) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('open');
+  pendingAction = null;
+}
+
+async function executeConfirm() {
+  const a = pendingAction;
+  closeConfirm();
+  if (!a) return;
+  switch(a.type) {
+    case 'delete-msg':
+      await db.collection('chats').doc(a.docId).delete();
+      break;
+    case 'delete-history':
+      await db.collection('history').doc(a.id).delete();
+      await writeLog('delete', 'Session historique supprimée');
+      break;
+    case 'disable-self':
+      await db.collection('users').doc(currentUser.uid).update({ status: 'disabled' });
+      await writeLog('modify', `Compte désactivé: ${currentUser.name}`);
+      doSignOut();
+      break;
+    case 'delete-self':
+      await db.collection('users').doc(currentUser.uid).delete();
+      await writeLog('delete', `Compte supprimé: ${currentUser.name}`);
+      auth.currentUser.delete().catch(()=>{});
+      doSignOut();
+      break;
+    case 'unlink-all':
+      const snap = await db.collection('users').where('coachId','==',currentUser.uid).get();
+      const batch = db.batch();
+      snap.forEach(doc => batch.update(doc.ref, { coachId: null }));
+      await batch.commit();
+      await writeLog('liaison', 'Tous les athlètes dissociés');
+      showToast('Athlètes dissociés');
+      break;
+    case 'dissoc-athlete':
+      if (selectedAthlete) {
+        await db.collection('users').doc(selectedAthlete.uid).update({ coachId: null });
+        await writeLog('liaison', `Athlète dissocié: ${selectedAthlete.name}`);
+        closeModal('modal-ath-detail');
+        showToast('Athlète dissocié');
+      }
+      break;
+    case 'admin-disable-user':
+      if (adminEditUid) {
+        await db.collection('users').doc(adminEditUid).update({ status: 'disabled' });
+        await writeLog('modify', 'Admin: compte utilisateur désactivé');
+        closeModal('modal-admin-user');
+        showToast('Compte désactivé');
+      }
+      break;
+    case 'admin-delete-user':
+      if (adminEditUid) {
+        await db.collection('users').doc(adminEditUid).delete();
+        await writeLog('delete', 'Admin: compte utilisateur supprimé');
+        closeModal('modal-admin-user');
+        showToast('Compte supprimé');
+      }
+      break;
+  }
+}
+
+function confirmAction(type) {
+  const msgs = {
+    'disable-self': ['Désactiver votre compte ?', 'Vous serez déconnecté.'],
+    'delete-self': ['Supprimer votre compte ?', 'Toutes vos données seront perdues.'],
+    'unlink-all': ['Dissocier tous les athlètes ?', 'Tous vos athlètes seront dissociés.'],
+    'dissoc-athlete': ['Dissocier cet athlète ?', 'La liaison sera supprimée.'],
+    'admin-disable-user': ['Désactiver ce compte ?', ''],
+    'admin-delete-user': ['Supprimer définitivement ?', 'Action irréversible.'],
+  };
+  pendingAction = { type };
+  const [title, msg] = msgs[type] || ['Confirmer ?', ''];
+  showConfirm(title, msg);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+document.getElementById('confirm-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirm-modal')) closeConfirm();
+});
+</script>
 </body>
 </html>
