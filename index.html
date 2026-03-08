@@ -3,229 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StartGo Pro - Dashboard</title>
+    <title>StartGo Pro</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --bg: #f8fafc;
-            --glass: rgba(255, 255, 255, 0.7);
-            --text: #0f172a;
-            --accent: #ff4757;
-            --sidebar: rgba(255, 255, 255, 0.4);
-        }
+        :root { --bg: #f8fafc; --glass: rgba(255, 255, 255, 0.7); --text: #0f172a; --accent: #ff4757; --sub: #64748b; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%); margin: 0; min-height: 100vh; color: var(--text); display: flex; justify-content: center; align-items: center; }
+        
+        /* AUTH CARD */
+        .auth-card { background: var(--glass); backdrop-filter: blur(20px); padding: 40px; border-radius: 40px; width: 90%; max-width: 380px; text-align: center; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { font-size: 0.65rem; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-left: 15px; }
+        input { width: 100%; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.5); margin-top: 5px; outline: none; box-sizing: border-box; font-weight: 600; }
+        
+        .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+        .role-option { padding: 15px; border-radius: 20px; background: rgba(255,255,255,0.4); border: 2px solid transparent; cursor: pointer; font-weight: 800; font-size: 0.8rem; color: var(--sub); transition: 0.3s; }
+        .role-option.active { border-color: var(--accent); color: var(--accent); background: white; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
-            margin: 0; min-height: 100vh; color: var(--text);
-            display: flex; justify-content: center; align-items: center;
-        }
-
-        /* --- AUTH STYLE --- */
-        .auth-card {
-            background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 40px; border-radius: 40px; width: 90%; max-width: 380px; text-align: center;
-            border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 20px 50px rgba(0,0,0,0.05);
-        }
-
-        /* --- DASHBOARD COACH STYLE --- */
-        #coach-dashboard {
-            display: none; width: 100vw; height: 100vh; grid-template-columns: 280px 1fr;
-        }
-
-        .sidebar {
-            background: var(--sidebar); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.5);
-            padding: 30px; display: flex; flex-direction: column; gap: 20px;
-        }
-
-        .main-content { padding: 40px; overflow-y: auto; }
-
-        .glass-block {
-            background: var(--glass); backdrop-filter: blur(20px); border-radius: 30px;
-            padding: 25px; border: 1px solid rgba(255,255,255,0.8); margin-bottom: 20px;
-        }
-
-        .code-display {
-            font-size: 3rem; font-weight: 900; letter-spacing: 5px; color: var(--accent); margin: 20px 0;
-        }
-
-        button {
-            padding: 15px 25px; border-radius: 20px; border: none; background: var(--text);
-            color: white; font-weight: 800; cursor: pointer; transition: 0.3s;
-        }
-
-        button:hover { transform: scale(1.02); }
+        /* DASHBOARD */
+        #coach-dashboard { display: none; width: 100vw; height: 100vh; grid-template-columns: 280px 1fr; position: fixed; top: 0; left: 0; background: var(--bg); }
+        .sidebar { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.5); padding: 30px; display: flex; flex-direction: column; }
+        .main-content { padding: 40px; overflow-y: auto; flex-grow: 1; }
+        .glass-block { background: var(--glass); backdrop-filter: blur(20px); border-radius: 30px; padding: 25px; border: 1px solid rgba(255,255,255,0.8); margin-bottom: 20px; }
+        
+        button { padding: 15px 25px; border-radius: 20px; border: none; background: var(--text); color: white; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-accent { background: var(--accent); }
-
-        .athlete-link {
-            padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.5);
-            margin-bottom: 10px; cursor: pointer; font-weight: 700; transition: 0.2s;
-        }
-
-        .athlete-link:hover { background: white; }
-
-        input {
-            width: 100%; padding: 12px; border-radius: 15px; border: 1px solid #ddd;
-            margin-bottom: 15px; outline: none;
-        }
+        .code-display { font-size: 3rem; font-weight: 900; color: var(--accent); margin: 20px 0; letter-spacing: 5px; }
     </style>
 </head>
 <body>
 
     <div id="auth-section" class="auth-card">
         <h2 style="font-weight:900;">STARTGO<span style="color:var(--accent)">.</span></h2>
-        <div id="signup-fields" style="display:none;">
-            <input type="text" id="fullname" placeholder="Nom complet">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button style="flex:1" onclick="selectedRole='athlete'">Athlète</button>
-                <button style="flex:1" onclick="selectedRole='coach'">Coach</button>
-            </div>
-        </div>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Mot de passe">
-        <button id="mainAuthBtn" onclick="handleAuth()" style="width:100%">Se connecter</button>
-        <p onclick="toggleAuthMode()" style="font-size:0.8rem; cursor:pointer; margin-top:15px; color:#64748b;">Créer un compte ?</p>
-    </div>
-
-    <div id="coach-dashboard">
-        <aside class="sidebar">
-            <h2 style="font-weight:900;">STARTGO<span style="color:var(--accent)">.</span></h2>
-            <div class="label" style="font-size:0.7rem; font-weight:800; color:#64748b; text-transform:uppercase;">Mes Athlètes</div>
-            <div id="athletes-list">
-                <p style="font-size:0.8rem; color:#64748b;">Aucun athlète lié.</p>
-            </div>
-            <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:auto; background:#eee; color:#666;">Déconnexion</button>
-        </aside>
-
-        <main class="main-content">
-            <div class="glass-block">
-                <h1 id="welcome-coach">Bonjour, Coach</h1>
-                <p style="color:#64748b;">Générez un code pour lier un nouvel athlète à votre compte.</p>
-                <button class="btn-accent" onclick="generatePairingCode()">Générer un Code éphémère</button>
-                <div id="pairing-area" style="display:none; margin-top:20px;">
-                    <div class="code-display" id="display-code">----</div>
-                    <p style="font-size:0.8rem;">Ce code est valable 10 minutes.</p>
-                </div>
-            </div>
-
-            <div class="glass-block" id="data-view" style="display:none;">
-                <h2 id="selected-athlete-name">Sélectionnez un athlète</h2>
-                <p>Les graphiques et statistiques apparaîtront ici.</p>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU",
-            authDomain: "startgo-project.firebaseapp.com",
-            projectId: "startgo-project",
-            storageBucket: "startgo-project.firebasestorage.app",
-            messagingSenderId: "920233789220",
-            appId: "1:920233789220:web:9f8a8d9fd3a3add39a55b1"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let isSignup = false;
-        let selectedRole = 'athlete';
-
-        function toggleAuthMode() {
-            isSignup = !isSignup;
-            document.getElementById('signup-fields').style.display = isSignup ? 'block' : 'none';
-            document.getElementById('mainAuthBtn').innerText = isSignup ? 'Créer mon compte' : 'Se connecter';
-        }
-
-        async function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            try {
-                if(isSignup) {
-                    const name = document.getElementById('fullname').value;
-                    const res = await auth.createUserWithEmailAndPassword(email, password);
-                    await db.collection('users').doc(res.user.uid).set({ name, role: selectedRole, email, uid: res.user.uid });
-                } else {
-                    await auth.signInWithEmailAndPassword(email, password);
-                }
-            } catch(e) { alert(e.message); }
-        }
-
-        // --- GESTION DU DASHBOARD ---
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const doc = await db.collection('users').doc(user.uid).get();
-                const userData = doc.data();
-                
-                if (userData.role === 'coach') {
-                    document.getElementById('auth-section').style.display = 'none';
-                    document.getElementById('coach-dashboard').style.display = 'grid';
-                    document.getElementById('welcome-coach').innerText = "Bonjour, " + userData.name;
-                    loadAthletes();
-                } else {
-                    alert("Interface Athlète en cours de développement...");
-                    // On s'occupera de l'athlète juste après
-                }
-            }
-        });
-
-        async function generatePairingCode() {
-            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const user = auth.currentUser;
-            
-            await db.collection('pairing_codes').doc(code).set({
-                coachId: user.uid,
-                coachName: (await db.collection('users').doc(user.uid).get()).data().name,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            document.getElementById('pairing-area').style.display = 'block';
-            document.getElementById('display-code').innerText = code;
-        }
-
-        function loadAthletes() {
-            // Cette fonction ira chercher les athlètes liés dans Firestore plus tard
-        }
-    </script>
-</body>
-</html>        
-        .input-group { margin-bottom: 15px; text-align: left; }
-        label { font-size: 0.65rem; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-left: 15px; }
-        
-        input {
-            width: 100%; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8);
-            background: rgba(255,255,255,0.5); margin-top: 5px; outline: none; box-sizing: border-box;
-            font-weight: 600; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); background: white; }
-
-        .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
-        
-        .role-option {
-            padding: 15px; border-radius: 20px; background: rgba(255,255,255,0.4);
-            border: 2px solid transparent; cursor: pointer; font-weight: 800; font-size: 0.8rem;
-            transition: 0.3s; color: var(--sub);
-        }
-        .role-option.active { border-color: var(--accent); color: var(--accent); background: white; }
-
-        #mainBtn {
-            width: 100%; padding: 20px; border-radius: 25px; border: none;
-            background: var(--text); color: white; font-weight: 800; cursor: pointer;
-            margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s;
-        }
-        #mainBtn:hover { transform: translateY(-2px); }
-
-        .toggle-link { font-size: 0.75rem; margin-top: 25px; cursor: pointer; color: var(--sub); font-weight: 600; }
-    </style>
-</head>
-<body>
-
-    <div class="auth-card">
-        <h2>STARTGO<span style="color:var(--accent)">.</span></h2>
-        
         <div id="signup-fields" style="display: none;">
             <div class="input-group">
                 <label>Nom complet</label>
@@ -236,23 +46,37 @@
                 <div class="role-option" id="opt-coach" onclick="selectRole('coach')">COACH</div>
             </div>
         </div>
-
         <div class="input-group">
             <label>Email</label>
             <input type="email" id="email" placeholder="coach@startgo.com">
         </div>
-        
         <div class="input-group">
             <label>Mot de passe</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
-
         <button id="mainBtn" onclick="handleAuth()">Se connecter</button>
-        <div class="toggle-link" id="toggle-btn" onclick="toggleMode()">Nouveau ici ? Créer un compte</div>
+        <div id="toggle-btn" onclick="toggleMode()" style="font-size: 0.75rem; margin-top: 25px; cursor: pointer; color: var(--sub); font-weight: 600;">Nouveau ici ? Créer un compte</div>
+    </div>
+
+    <div id="coach-dashboard">
+        <aside class="sidebar">
+            <h2 style="font-weight:900;">STARTGO<span style="color:var(--accent)">.</span></h2>
+            <p style="font-size:0.7rem; font-weight:800; color:var(--sub); text-transform:uppercase;">Mes Athlètes</p>
+            <div id="athletes-list"><p style="font-size:0.8rem; color:var(--sub);">Aucun athlète lié.</p></div>
+            <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:auto; background:#eee; color:#666;">Déconnexion</button>
+        </aside>
+        <main class="main-content">
+            <div class="glass-block">
+                <h1 id="welcome-coach">Bonjour, Coach</h1>
+                <button class="btn-accent" onclick="generatePairingCode()">Générer un Code</button>
+                <div id="pairing-area" style="display:none; text-align: center;">
+                    <div class="code-display" id="display-code">----</div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // CONFIGURATION AUTOMATIQUE (Tes clés)
         const firebaseConfig = {
             apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU",
             authDomain: "startgo-project.firebaseapp.com",
@@ -285,29 +109,42 @@
         async function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
             try {
                 if (isSignup) {
                     const name = document.getElementById('fullname').value;
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    
-                    // Enregistrement du profil dans Firestore
-                    await db.collection('users').doc(userCredential.user.uid).set({
-                        name: name,
-                        role: selectedRole,
-                        email: email,
-                        uid: userCredential.user.uid
-                    });
-                    alert("Compte " + selectedRole + " créé avec succès !");
+                    const res = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(res.user.uid).set({ name, role: selectedRole, email, uid: res.user.uid });
                 } else {
                     await auth.signInWithEmailAndPassword(email, password);
-                    alert("Connexion réussie !");
                 }
-                
-                // Ici, on pourra rediriger vers le Dashboard plus tard
-            } catch (error) {
-                alert("Erreur : " + error.message);
+            } catch (e) { alert(e.message); }
+        }
+
+        // --- ECOUTEUR DE CONNEXION (Gère l'affichage automatique) ---
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.role === 'coach') {
+                        document.getElementById('auth-section').style.display = 'none';
+                        document.getElementById('coach-dashboard').style.display = 'grid';
+                        document.getElementById('welcome-coach').innerText = "Bonjour, " + userData.name;
+                    } else {
+                        alert("Interface Athlète en développement !");
+                    }
+                }
             }
+        });
+
+        async function generatePairingCode() {
+            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+            await db.collection('pairing_codes').doc(code).set({
+                coachId: auth.currentUser.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('pairing-area').style.display = 'block';
+            document.getElementById('display-code').innerText = code;
         }
     </script>
 </body>
