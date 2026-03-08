@@ -3,36 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>StartGo Pro - Ultimate</title>
+    <title>StartGo</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --bg: #f8fafc; --panel: #ffffff; --stroke: #e2e8f0; --text: #0f172a; --sub: #64748b; --accent: #ff4757; --nav-bg: #0f172a; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
-        
-        .header { background: var(--panel); padding: 15px 20px; border-bottom: 1px solid var(--stroke); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        
-        .card { background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--stroke); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        input, select { background: #f1f5f9; border: 1px solid var(--stroke); padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; font-size: 1rem; color: var(--text); }
-        button { background: var(--text); color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
-        .btn-accent { background: var(--accent); }
-        .btn-ghost { background: #f1f5f9; color: var(--text); margin-top: 5px; }
-
-        .msg-list-item { display: flex; align-items: center; padding: 12px; border-radius: 15px; cursor: pointer; margin-bottom: 5px; transition: 0.2s; background: white; border: 1px solid var(--stroke); }
-        .msg-avatar { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; background: #e2e8f0; }
-        
-        #chat-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 200; display: none; flex-direction: column; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .bubble { padding: 12px 16px; border-radius: 18px; max-width: 75%; font-size: 0.95rem; }
-        .bubble.me { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px; }
-        .bubble.them { align-self: flex-start; background: white; color: var(--text); border: 1px solid var(--stroke); border-bottom-left-radius: 4px; }
-
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 12px 5px; border-top-left-radius: 25px; border-top-right-radius: 25px; }
-        .nav-item { color: #94a3b8; font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
-        .nav-item.active { color: var(--accent); }
-        .nav-item svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+        :root { --bg: #000000; --panel: #121212; --stroke: #262626; --text: #ffffff; --sub: #a8a8a8; --accent: #0095f6; --nav-bg: #000000; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+        .header { background: var(--bg); padding: 15px 20px; border-bottom: 1px solid var(--stroke); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .card { background: var(--panel); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--stroke); }
+        input, select { background: #262626; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 12px; box-sizing: border-box; color: white; }
+        button { background: var(--accent); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; width: 100%; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid var(--stroke); z-index: 100; }
+        .nav-item { color: #8e8e8e; text-decoration: none; font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .nav-item.active { color: white; }
+        .nav-item svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .msg-list-item { display: flex; align-items: center; padding: 12px 5px; cursor: pointer; }
+        .msg-avatar { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
+        #chat-box { height: calc(100vh - 250px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+        .bubble { padding: 8px 15px; border-radius: 18px; max-width: 75%; font-size: 0.9rem; word-wrap: break-word; }
+        .bubble.me { align-self: flex-end; background: var(--accent); color: white; }
+        .bubble.them { align-self: flex-start; background: #262626; color: white; }
     </style>
 </head>
 <body>
@@ -41,73 +33,66 @@
         <div class="card" style="width:100%; max-width:350px; text-align:center;">
             <h1 style="font-weight:900;">STARTGO<span style="color:var(--accent);">.</span></h1>
             <div id="signup-fields" style="display:none;">
-                <input type="text" id="reg-name" placeholder="Nom ou Pseudo">
+                <input type="text" id="reg-name" placeholder="Pseudo">
                 <select id="reg-role"><option value="athlete">Athlète</option><option value="coach">Coach</option></select>
             </div>
-            <input type="email" id="email" placeholder="Email"><input type="password" id="pass" placeholder="Mdp">
-            <button onclick="handleAuth()" class="btn-accent">CONTINUER</button>
-            <p onclick="document.getElementById('signup-fields').style.display='block'" style="font-size:0.8rem; margin-top:15px; color:var(--sub); cursor:pointer;">Créer un compte</p>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="pass" placeholder="Mot de passe">
+            <button onclick="handleAuth()">CONTINUER</button>
+            <p onclick="document.getElementById('signup-fields').style.display='block'" style="font-size:0.8rem; color:var(--sub); margin-top:15px; cursor:pointer;">Créer un compte</p>
         </div>
     </div>
 
     <div id="app-ui" style="display:none;">
         <header class="header">
-            <div style="font-weight:900;">STARTGO<span id="role-tag" style="color:var(--accent); font-size:0.7rem;"></span></div>
-            <div id="user-name" style="font-size:0.85rem; font-weight:600; color:var(--sub);">...</div>
+            <div style="font-weight:900;">STARTGO<span id="role-tag" style="color:var(--accent); font-size:0.7rem; margin-left:5px;"></span></div>
+            <div id="user-name" style="font-size:0.85rem;">...</div>
         </header>
 
         <main class="container">
             <div id="tab-home" class="tab-sec">
-                <div id="ath-home" style="display:none;">
-                    <div class="card"><div style="font-size:4rem; font-weight:900; text-align:center;">0.00</div><button class="btn-accent">START SESSION</button></div>
-                </div>
+                <div id="ath-home" style="display:none;"><div class="card"><div id="timer" style="font-size:4rem; font-weight:900; text-align:center;">0.00</div><button>DÉMARRER</button></div></div>
                 <div id="coa-home" style="display:none;"><h3>Mes Athlètes</h3><div id="coa-list"></div></div>
             </div>
 
             <div id="tab-msg" class="tab-sec" style="display:none;">
-                <input type="text" placeholder="Rechercher..." oninput="searchUsers(this.value)">
-                <div id="search-results"></div>
-                <div id="contacts-list" style="margin-top:15px;"></div>
+                <div id="contacts-container">
+                    <input type="text" placeholder="Rechercher..." oninput="searchUsers(this.value)">
+                    <div id="search-results"></div>
+                    <div id="contacts-list"></div>
+                </div>
+                <div id="chat-window" style="display:none;">
+                    <div style="display:flex; align-items:center; border-bottom:1px solid var(--stroke); padding-bottom:10px;">
+                        <button onclick="backToContacts()" style="width:40px; background:none;">←</button>
+                        <b id="active-user-name" style="margin-left:10px;"></b>
+                    </div>
+                    <div id="chat-box"></div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="m-in" placeholder="Message..." style="margin:0;">
+                        <button onclick="sendMsg()" style="width:60px;">></button>
+                    </div>
+                </div>
             </div>
 
             <div id="tab-set" class="tab-sec" style="display:none;">
                 <div class="card">
-                    <h3>Mon Profil</h3>
                     <input type="number" id="set-weight" placeholder="Poids (kg)">
                     <input type="number" id="set-height" placeholder="Taille (cm)">
                     <input type="text" id="set-goal" placeholder="Objectif">
-                    <button onclick="updateProfile()" class="btn-accent">SAUVEGARDER</button>
+                    <button onclick="updateProfile()">SAUVEGARDER</button>
                 </div>
-                <div class="card">
-                    <div id="coa-pairing" style="display:none; text-align:center;">
-                        <div id="pair-display" style="font-size:2.5rem; font-weight:900; color:var(--accent);">------</div>
-                        <button onclick="genPairCode()" class="btn-ghost">GÉNÉRER CODE</button>
-                    </div>
-                    <div id="ath-pairing" style="display:none;">
-                        <input type="text" id="pair-input" placeholder="Code du coach">
-                        <button onclick="joinCoach()" class="btn-ghost">LIER MON COACH</button>
-                    </div>
+                <div class="card" id="liaison-card">
+                    <div id="coa-pairing" style="display:none;"><div id="pair-display" style="font-size:2rem; text-align:center; color:var(--accent); font-weight:bold;">------</div><button onclick="genPairCode()">GÉNÉRER CODE</button></div>
+                    <div id="ath-pairing" style="display:none;"><input type="text" id="pair-input" placeholder="Code Coach"><button onclick="joinCoach()">LIER</button></div>
                 </div>
-                <button onclick="auth.signOut().then(()=>location.reload())" style="background:#000;">DÉCONNEXION</button>
+                <button onclick="auth.signOut().then(()=>location.reload())" style="background:#ed4956;">DÉCONNEXION</button>
             </div>
         </main>
 
-        <div id="chat-window">
-            <div style="padding:15px; border-bottom:1px solid var(--stroke); display:flex; align-items:center; gap:10px; background:white;">
-                <button onclick="backToContacts()" style="width:40px; background:none; color:black;">←</button>
-                <b id="active-user-name">Chat</b>
-            </div>
-            <div id="chat-box"></div>
-            <div style="padding:15px; display:flex; gap:10px; background:white;">
-                <input type="text" id="m-in" placeholder="Message..." style="margin:0;">
-                <button onclick="sendMsg()" class="btn-accent" style="width:60px;">></button>
-            </div>
-        </div>
-
         <nav class="nav-bar">
-            <div class="nav-item active" onclick="setTab('home', this)">Accueil</div>
-            <div class="nav-item" onclick="setTab('msg', this)">Messages</div>
-            <div class="nav-item" onclick="setTab('set', this)">Profil</div>
+            <div class="nav-item active" onclick="setTab('home', this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</div>
+            <div class="nav-item" onclick="setTab('msg', this)"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>Chat</div>
+            <div class="nav-item" onclick="setTab('set', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Profil</div>
         </nav>
     </div>
 
@@ -123,8 +108,7 @@
                 uData = snap.data();
                 if(uData) {
                     document.getElementById('user-name').innerText = uData.name;
-                    document.getElementById('role-tag').innerText = uData.role.toUpperCase();
-                    loadUI(); loadContacts();
+                    loadUI();
                     document.getElementById('auth-ui').style.display = 'none';
                     document.getElementById('app-ui').style.display = 'block';
                 }
@@ -136,31 +120,49 @@
 
         function loadUI() {
             const isCoach = uData.role === 'coach';
+            document.getElementById('role-tag').innerText = uData.role.toUpperCase();
             document.getElementById('ath-home').style.display = isCoach ? 'none' : 'block';
             document.getElementById('coa-home').style.display = isCoach ? 'block' : 'none';
             document.getElementById('coa-pairing').style.display = isCoach ? 'block' : 'none';
             document.getElementById('ath-pairing').style.display = isCoach ? 'none' : 'block';
-            document.getElementById('set-weight').value = uData.weight || '';
-            document.getElementById('set-height').value = uData.height || '';
-            document.getElementById('set-goal').value = uData.goal || '';
+            document.getElementById('set-weight').value = uData.weight || "";
+            document.getElementById('set-height').value = uData.height || "";
+            document.getElementById('set-goal').value = uData.goal || "";
+        }
+
+        async function searchUsers(val) {
+            const resBox = document.getElementById('search-results');
+            if(val.length < 2) { resBox.innerHTML = ""; return; }
+            const s = await db.collection('users').where('name', '>=', val).limit(5).get();
+            resBox.innerHTML = "";
+            s.forEach(doc => {
+                let u = doc.data(); if(u.uid === auth.currentUser.uid) return;
+                let d = document.createElement('div');
+                d.style = "padding:10px; border-bottom:1px solid #222; cursor:pointer;";
+                d.innerText = u.name + " (" + u.role + ")";
+                d.onclick = () => { openChat(u.uid, u.name); resBox.innerHTML = ""; };
+                resBox.appendChild(d);
+            });
         }
 
         async function loadContacts() {
             const list = document.getElementById('contacts-list');
-            list.innerHTML = "";
+            list.innerHTML = "Chargement...";
             let contacts = [];
             if(uData.role === 'coach') {
                 const s = await db.collection('users').where('coachId', '==', auth.currentUser.uid).get();
-                s.forEach(d => contacts.push(d.data()));
+                s.forEach(doc => contacts.push(doc.data()));
             } else if(uData.coachId) {
-                const d = await db.collection('users').doc(uData.coachId).get();
-                if(d.exists) contacts.push(d.data());
+                const doc = await db.collection('users').doc(uData.coachId).get();
+                if(doc.exists) contacts.push(doc.data());
             }
+            list.innerHTML = contacts.length ? "" : "<p style='color:gray;text-align:center;'>Aucun contact lié.</p>";
             contacts.forEach(c => {
                 const div = document.createElement('div');
                 div.className = 'msg-list-item';
                 div.onclick = () => openChat(c.uid, c.name);
-                div.innerHTML = `<div class="msg-avatar"></div><div><b>${c.name}</b><br><small>${c.role}</small></div>`;
+                div.innerHTML = `<img src="https://ui-avatars.com/api/?name=${c.name}&background=random" class="msg-avatar">
+                                 <div><b>${c.name}</b><br><small style="color:gray">${c.role}</small></div>`;
                 list.appendChild(div);
             });
         }
@@ -168,15 +170,20 @@
         function openChat(uid, name) {
             if(chatUnsub) chatUnsub();
             activeChatId = uid;
-            document.getElementById('chat-window').style.display = 'flex';
+            document.getElementById('contacts-container').style.display = 'none';
+            document.getElementById('chat-window').style.display = 'block';
             document.getElementById('active-user-name').innerText = name;
             
+            // ID de salon unique basé sur les deux UIDs triés (pour que A->B et B->A soit le même salon)
             const chatId = [auth.currentUser.uid, uid].sort().join('_');
-            chatUnsub = db.collection('messages').where('chatId', '==', chatId)
-                .orderBy('date', 'asc').onSnapshot(s => {
-                    const box = document.getElementById('chat-box'); box.innerHTML = "";
-                    s.forEach(d => {
-                        const m = d.data();
+            
+            chatUnsub = db.collection('chats').doc(chatId).collection('messages')
+                .orderBy('date', 'asc')
+                .onSnapshot(s => {
+                    const box = document.getElementById('chat-box');
+                    box.innerHTML = "";
+                    s.forEach(doc => {
+                        const m = doc.data();
                         const b = document.createElement('div');
                         b.className = `bubble ${m.sender === auth.currentUser.uid ? 'me' : 'them'}`;
                         b.innerText = m.text;
@@ -190,18 +197,16 @@
             const txt = document.getElementById('m-in').value.trim();
             if(!txt || !activeChatId) return;
             const chatId = [auth.currentUser.uid, activeChatId].sort().join('_');
-            await db.collection('messages').add({
-                chatId: chatId,
-                text: txt,
-                sender: auth.currentUser.uid,
-                date: Date.now()
+            await db.collection('chats').doc(chatId).collection('messages').add({
+                text: txt, sender: auth.currentUser.uid, date: Date.now()
             });
             document.getElementById('m-in').value = "";
         }
 
-        function backToContacts() { 
+        function backToContacts() {
             if(chatUnsub) chatUnsub();
-            document.getElementById('chat-window').style.display = 'none'; 
+            document.getElementById('contacts-container').style.display = 'block';
+            document.getElementById('chat-window').style.display = 'none';
         }
 
         function setTab(id, el) {
@@ -209,6 +214,13 @@
             document.getElementById('tab-'+id).style.display = 'block';
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
+            if(id === 'msg') loadContacts();
+        }
+
+        async function updateProfile() {
+            const up = { weight: document.getElementById('set-weight').value, height: document.getElementById('set-height').value, goal: document.getElementById('set-goal').value };
+            await db.collection('users').doc(auth.currentUser.uid).update(up);
+            alert("Profil mis à jour !");
         }
 
         async function genPairCode() {
@@ -218,12 +230,12 @@
         }
 
         async function joinCoach() {
-            const c = document.getElementById('pair-input').value.toUpperCase().trim();
-            const d = await db.collection('pairing_codes').doc(c).get();
+            const code = document.getElementById('pair-input').value.toUpperCase().trim();
+            const d = await db.collection('pairing_codes').doc(code).get();
             if(d.exists && Date.now() < d.data().expires) {
                 await db.collection('users').doc(auth.currentUser.uid).update({ coachId: d.data().coachId });
                 alert("Coach lié !"); location.reload();
-            } else alert("Code invalide");
+            } else alert("Code invalide ou expiré");
         }
 
         async function handleAuth() {
@@ -232,9 +244,7 @@
                 if(document.getElementById('signup-fields').style.display === 'block') {
                     const r = await auth.createUserWithEmailAndPassword(e, p);
                     await db.collection('users').doc(r.user.uid).set({ uid: r.user.uid, name: document.getElementById('reg-name').value, role: document.getElementById('reg-role').value });
-                } else {
-                    await auth.signInWithEmailAndPassword(e, p);
-                }
+                } else await auth.signInWithEmailAndPassword(e, p);
             } catch(err) { alert(err.message); }
         }
     </script>
