@@ -1,242 +1,43 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>StartGo Pro - Ultimate</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --bg: #f8fafc; --panel: #ffffff; --stroke: #e2e8f0; --text: #0f172a; --sub: #64748b; --accent: #ff4757; --nav-bg: #0f172a; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
-        
-        .header { background: var(--panel); padding: 15px 20px; border-bottom: 1px solid var(--stroke); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        
-        .card { background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--stroke); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        input, select { background: #f1f5f9; border: 1px solid var(--stroke); padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; font-size: 1rem; color: var(--text); }
-        button { background: var(--text); color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
-        .btn-accent { background: var(--accent); }
-        .btn-ghost { background: #f1f5f9; color: var(--text); margin-top: 5px; }
-
-        .msg-list-item { display: flex; align-items: center; padding: 12px; border-radius: 15px; cursor: pointer; margin-bottom: 5px; transition: 0.2s; background: white; border: 1px solid var(--stroke); }
-        .msg-avatar { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; background: #e2e8f0; }
-        
-        #chat-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 200; display: none; flex-direction: column; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .bubble { padding: 12px 16px; border-radius: 18px; max-width: 75%; font-size: 0.95rem; }
-        .bubble.me { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px; }
-        .bubble.them { align-self: flex-start; background: white; color: var(--text); border: 1px solid var(--stroke); border-bottom-left-radius: 4px; }
-
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 12px 5px; border-top-left-radius: 25px; border-top-right-radius: 25px; }
-        .nav-item { color: #94a3b8; font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
-        .nav-item.active { color: var(--accent); }
-        .nav-item svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; width: 100%; max-width: 350px; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; margin-bottom: 20px; transition: 0.3s; }
+        .val { font-size: 4rem; font-weight: 800; color: #1e293b; margin: 10px 0; }
+        .unit { font-size: 1.5rem; color: #94a3b8; }
+        .speed { font-size: 1.2rem; font-weight: 700; color: #6366f1; margin-top: 15px; }
+        button { width: 100%; padding: 18px; border-radius: 18px; border: none; background: #6366f1; color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+    </style>
 </head>
 <body>
-
-    <div id="auth-ui" style="display:none; height:100vh; align-items:center; justify-content:center; padding:20px;">
-        <div class="card" style="width:100%; max-width:350px; text-align:center;">
-            <h1 style="font-weight:900;">STARTGO<span style="color:var(--accent);">.</span></h1>
-            <div id="signup-fields" style="display:none;">
-                <input type="text" id="reg-name" placeholder="Nom ou Pseudo">
-                <select id="reg-role"><option value="athlete">Athlète</option><option value="coach">Coach</option></select>
-            </div>
-            <input type="email" id="email" placeholder="Email"><input type="password" id="pass" placeholder="Mdp">
-            <button onclick="handleAuth()" class="btn-accent">CONTINUER</button>
-            <p onclick="document.getElementById('signup-fields').style.display='block'" style="font-size:0.8rem; margin-top:15px; color:var(--sub); cursor:pointer;">Créer un compte</p>
-        </div>
-    </div>
-
-    <div id="app-ui" style="display:none;">
-        <header class="header">
-            <div style="font-weight:900;">STARTGO<span id="role-tag" style="color:var(--accent); font-size:0.7rem;"></span></div>
-            <div id="user-name" style="font-size:0.85rem; font-weight:600; color:var(--sub);">...</div>
-        </header>
-
-        <main class="container">
-            <div id="tab-home" class="tab-sec">
-                <div id="ath-home" style="display:none;">
-                    <div class="card"><div style="font-size:4rem; font-weight:900; text-align:center;">0.00</div><button class="btn-accent">START SESSION</button></div>
-                </div>
-                <div id="coa-home" style="display:none;"><h3>Mes Athlètes</h3><div id="coa-list"></div></div>
-            </div>
-
-            <div id="tab-msg" class="tab-sec" style="display:none;">
-                <input type="text" placeholder="Rechercher..." oninput="searchUsers(this.value)">
-                <div id="search-results"></div>
-                <div id="contacts-list" style="margin-top:15px;"></div>
-            </div>
-
-            <div id="tab-set" class="tab-sec" style="display:none;">
-                <div class="card">
-                    <h3>Mon Profil</h3>
-                    <input type="number" id="set-weight" placeholder="Poids (kg)">
-                    <input type="number" id="set-height" placeholder="Taille (cm)">
-                    <input type="text" id="set-goal" placeholder="Objectif">
-                    <button onclick="updateProfile()" class="btn-accent">SAUVEGARDER</button>
-                </div>
-                <div class="card">
-                    <div id="coa-pairing" style="display:none; text-align:center;">
-                        <div id="pair-display" style="font-size:2.5rem; font-weight:900; color:var(--accent);">------</div>
-                        <button onclick="genPairCode()" class="btn-ghost">GÉNÉRER CODE</button>
-                    </div>
-                    <div id="ath-pairing" style="display:none;">
-                        <input type="text" id="pair-input" placeholder="Code du coach">
-                        <button onclick="joinCoach()" class="btn-ghost">LIER MON COACH</button>
-                    </div>
-                </div>
-                <button onclick="auth.signOut().then(()=>location.reload())" style="background:#000;">DÉCONNEXION</button>
-            </div>
-        </main>
-
-        <div id="chat-window">
-            <div style="padding:15px; border-bottom:1px solid var(--stroke); display:flex; align-items:center; gap:10px; background:white;">
-                <button onclick="backToContacts()" style="width:40px; background:none; color:black;">←</button>
-                <b id="active-user-name">Chat</b>
-            </div>
-            <div id="chat-box"></div>
-            <div style="padding:15px; display:flex; gap:10px; background:white;">
-                <input type="text" id="m-in" placeholder="Message..." style="margin:0;">
-                <button onclick="sendMsg()" class="btn-accent" style="width:60px;">></button>
-            </div>
-        </div>
-
-        <nav class="nav-bar">
-            <div class="nav-item active" onclick="setTab('home', this)">Accueil</div>
-            <div class="nav-item" onclick="setTab('msg', this)">Messages</div>
-            <div class="nav-item" onclick="setTab('set', this)">Profil</div>
-        </nav>
-    </div>
-
-    <script>
-        const config = { apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU", authDomain: "startgo-project.firebaseapp.com", projectId: "startgo-project", storageBucket: "startgo-project.firebasestorage.app", messagingSenderId: "920233789220", appId: "1:920233789220:web:9f8a8d9fd3a3add39a55b1" };
-        firebase.initializeApp(config);
-        const auth = firebase.auth(), db = firebase.firestore();
-        let uData = null, activeChatId = null, chatUnsub = null;
-
-        auth.onAuthStateChanged(async (u) => {
-            if (u) {
-                const snap = await db.collection('users').doc(u.uid).get();
-                uData = snap.data();
-                if(uData) {
-                    document.getElementById('user-name').innerText = uData.name;
-                    document.getElementById('role-tag').innerText = uData.role.toUpperCase();
-                    loadUI(); loadContacts();
-                    document.getElementById('auth-ui').style.display = 'none';
-                    document.getElementById('app-ui').style.display = 'block';
-                }
-            } else {
-                document.getElementById('auth-ui').style.display = 'flex';
-                document.getElementById('app-ui').style.display = 'none';
-            }
-        });
-
-        function loadUI() {
-            const isCoach = uData.role === 'coach';
-            document.getElementById('ath-home').style.display = isCoach ? 'none' : 'block';
-            document.getElementById('coa-home').style.display = isCoach ? 'block' : 'none';
-            document.getElementById('coa-pairing').style.display = isCoach ? 'block' : 'none';
-            document.getElementById('ath-pairing').style.display = isCoach ? 'none' : 'block';
-            document.getElementById('set-weight').value = uData.weight || '';
-            document.getElementById('set-height').value = uData.height || '';
-            document.getElementById('set-goal').value = uData.goal || '';
-        }
-
-        async function loadContacts() {
-            const list = document.getElementById('contacts-list');
-            list.innerHTML = "";
-            let contacts = [];
-            if(uData.role === 'coach') {
-                const s = await db.collection('users').where('coachId', '==', auth.currentUser.uid).get();
-                s.forEach(d => contacts.push(d.data()));
-            } else if(uData.coachId) {
-                const d = await db.collection('users').doc(uData.coachId).get();
-                if(d.exists) contacts.push(d.data());
-            }
-            contacts.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'msg-list-item';
-                div.onclick = () => openChat(c.uid, c.name);
-                div.innerHTML = `<div class="msg-avatar"></div><div><b>${c.name}</b><br><small>${c.role}</small></div>`;
-                list.appendChild(div);
-            });
-        }
-
-        function openChat(uid, name) {
-            if(chatUnsub) chatUnsub();
-            activeChatId = uid;
-            document.getElementById('chat-window').style.display = 'flex';
-            document.getElementById('active-user-name').innerText = name;
-            
-            const chatId = [auth.currentUser.uid, uid].sort().join('_');
-            chatUnsub = db.collection('messages').where('chatId', '==', chatId)
-                .orderBy('date', 'asc').onSnapshot(s => {
-                    const box = document.getElementById('chat-box'); box.innerHTML = "";
-                    s.forEach(d => {
-                        const m = d.data();
-                        const b = document.createElement('div');
-                        b.className = `bubble ${m.sender === auth.currentUser.uid ? 'me' : 'them'}`;
-                        b.innerText = m.text;
-                        box.appendChild(b);
-                    });
-                    box.scrollTop = box.scrollHeight;
-                });
-        }
-
-        async function sendMsg() {
-            const txt = document.getElementById('m-in').value.trim();
-            if(!txt || !activeChatId) return;
-            const chatId = [auth.currentUser.uid, activeChatId].sort().join('_');
-            await db.collection('messages').add({
-                chatId: chatId,
-                text: txt,
-                sender: auth.currentUser.uid,
-                date: Date.now()
-            });
-            document.getElementById('m-in').value = "";
-        }
-
-        function backToContacts() { 
-            if(chatUnsub) chatUnsub();
-            document.getElementById('chat-window').style.display = 'none'; 
-        }
-
-        function setTab(id, el) {
-            document.querySelectorAll('.tab-sec').forEach(t => t.style.display = 'none');
-            document.getElementById('tab-'+id).style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        async function genPairCode() {
-            const code = Math.random().toString(36).substring(2,8).toUpperCase();
-            await db.collection('pairing_codes').doc(code).set({ coachId: auth.currentUser.uid, expires: Date.now() + 600000 });
-            document.getElementById('pair-display').innerText = code;
-        }
-
-        async function joinCoach() {
-            const c = document.getElementById('pair-input').value.toUpperCase().trim();
-            const d = await db.collection('pairing_codes').doc(c).get();
-            if(d.exists && Date.now() < d.data().expires) {
-                await db.collection('users').doc(auth.currentUser.uid).update({ coachId: d.data().coachId });
-                alert("Coach lié !"); location.reload();
-            } else alert("Code invalide");
-        }
-
-        async function handleAuth() {
-            const e = document.getElementById('email').value, p = document.getElementById('pass').value;
-            try {
-                if(document.getElementById('signup-fields').style.display === 'block') {
-                    const r = await auth.createUserWithEmailAndPassword(e, p);
-                    await db.collection('users').doc(r.user.uid).set({ uid: r.user.uid, name: document.getElementById('reg-name').value, role: document.getElementById('reg-role').value });
-                } else {
-                    await auth.signInWithEmailAndPassword(e, p);
-                }
-            } catch(err) { alert(err.message); }
-        }
-    </script>
+    <div class="card">
+        <div id="badge" class="badge" style="background:#e2e8f0; color:#475569">PRÊT</div>
+        <div style="color:#64748b; font-size:0.75rem; font-weight:700;">TEMPS DE RÉACTION</div>
+        <div class="val"><span id="react">0.000</span><span class="unit">s</span></div>
+        <div id="speed" class="speed">--.- m/s</div>
+        <br><br>
+        <button onclick="fetch('/start')">DÉMARRER LA SESSION</button>
+    </div>
+    <script>
+        setInterval(async () => {
+            try {
+                const r = await fetch('/data');
+                const d = await r.json();
+                document.getElementById('badge').innerText = d.status;
+                document.getElementById('badge').style.background = d.color;
+                document.getElementById('badge').style.color = (d.color == "#e2e8f0") ? "#475569" : "white";
+                document.getElementById('react').innerText = d.react;
+                document.getElementById('speed').innerText = d.speed + " m/s";
+            } catch(e) {}
+        }, 300);
+    </script>
 </body>
 </html>
+
+je souhaite que tu crée un site sur le quel avec un bip annonce le départ , voici l’idée de tout le project
+La solution consiste à utiliser un système de départ contrôlé à distance grâce à une application mobile connectée en Wi-Fi, sans écran intégré sur le dispositif. Le système est composé d’un microcontrôleur relié à un module Wi-Fi et à un buzzer qui émet le signal sonore de départ. L’utilisateur se connecte au dispositif via son smartphone et accède à une interface web (site) hébergée par le système. Ce site permet de contrôler le dispositif : déclencher le signal de départ, ajuster certains paramètres et vérifier le bon fonctionnement du système. L’interface du site est simple et accessible depuis n’importe quel navigateur, ce qui évite l’installation d’une application spécifique. L’absence d’écran intégré simplifie le montage, réduit la consommation d’énergie et limite les risques de panne matérielle. Cette solution permet donc un contrôle à distance, une utilisation intuitive et une grande flexibilité, tout en restant simple et efficace.
+
+avec une partie de telecomande pour tester l’app et faire des test ( comme decolage du pied et arriver,) pour l’instant uniquement un site html uniquement pour plus tard faire un code esp32 mais pas mtn
