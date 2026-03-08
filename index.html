@@ -3,38 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StartGo Pro - Analytics</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>StartGo - Premium</title>
     <style>
         :root {
-            --bg: #f0f4f8;
-            --glass: rgba(255, 255, 255, 0.55);
-            --text: #1e293b;
-            --accent: #ff4757;
-            --sub: #64748b;
+            --bg: #e2e8f0;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --text: #0f172a;
+            --sub: #475569;
+            --accent: #f43f5e;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
-            margin: 0; min-height: 100vh; color: var(--text);
-            display: flex; flex-direction: column; align-items: center;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(160deg, #f8fafc 0%, #cbd5e1 100%);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0 50px;
         }
 
         .glass-panel {
-            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.7); border-radius: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: var(--card-shadow);
         }
 
-        /* --- AUTH --- */
-        #auth-section { margin-top: 10vh; padding: 40px; width: 320px; text-align: center; }
+        header {
+            width: 90%; max-width: 450px;
+            padding: 20px; text-align: center; margin-bottom: 15px;
+        }
 
-        /* --- ATHLETE VIEW --- */
-        #athlete-view { display: none; width: 90%; max-width: 450px; padding: 20px 0; }
+        .hero {
+            width: 90%; max-width: 450px;
+            padding: 40px 20px; text-align: center; margin-bottom: 15px;
+        }
+
+        #time {
+            font-size: 7.5rem; font-weight: 900; letter-spacing: -6px;
+            line-height: 1; margin: 10px 0; color: var(--text);
+        }
+
+        .stats-grid {
+            width: 90%; max-width: 450px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
+        }
+
+        .stat-card { padding: 20px; text-align: center; }
+        .label { font-size: 0.65rem; font-weight: 800; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; }
+
+        .controls {
+            width: 90%; max-width: 450px; padding: 25px; margin-bottom: 30px;
+        }
+
+        input[type=range] { width: 100%; height: 6px; border-radius: 10px; appearance: none; background: rgba(0,0,0,0.1); outline: none; margin: 15px 0; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: var(--text); border-radius: 50%; cursor: pointer; }
+
+        #mainBtn {
+            width: 100%; padding: 22px; border-radius: 20px; border: none;
+            background: var(--text); color: white; font-weight: 800; font-size: 1rem;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        /* Historique éditable */
+        .history { width: 90%; max-width: 450px; }
+        .h-item {
+            background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border);
+            padding: 15px 20px; border-radius: 20px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .h-edit-name { 
+            border: none; background: transparent; font-weight: 800; 
+            font-size: 0.9rem; color: var(--text); width: 120px;
+        }
+
+        .delete-btn {
+            background: none; border: none; color: var(--accent);
+            font-size: 1.2rem; cursor: pointer; padding: 0 5px;
+        }
+
+        .h-data { text-align: right; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-panel">
+        <div style="font-weight: 900; font-size: 1.2rem;">STARTGO<span style="color:var(--accent)">.</span></div>
+    </header>
+
+    <main class="hero glass-panel">
+        <input type="text" id="sessionName" value="Course 1" style="background:none; border:none; text-align:center; font-weight:700; width:100%; outline:none;">
+        <div id="time">0.00</div>
+        <div class="label">secondes</div>
+    </main>
+
+    <div class="stats-grid">
+        <div class="stat-card glass-panel">
+            <span class="label">Réaction</span>
+            <div id="react" style="font-size: 1.5rem; font-weight: 800;">0.00</div>
+        </div>
+        <div class="stat-card glass-panel">
+            <span class="label">Vitesse</span>
+            <div id="speed" style="font-size: 1.5rem; font-weight: 800;">0.0</div>
+        </div>
+    </div>
+
+    <section class="controls glass-panel">
+        <div style="display:flex; justify-content:space-between;" class="label">
+            <span>Distance</span><span id="d-val">10m</span>
+        </div>
+        <input type="range" id="dist" min="5" max="100" value="10" oninput="document.getElementById('d-val').innerText=this.value+'m'">
+        <button id="mainBtn" onclick="run()">LANCER</button>
+    </section>
+
+    <div class="history" id="history-list"></div>
+
+    <script>
+        let state = "IDLE", start, timer, logs = [];
+
+        window.onload = () => {
+            const saved = document.cookie.split('; ').find(r => r.startsWith('history='));
+            if (saved) {
+                logs = JSON.parse(decodeURIComponent(saved.split('=')[1]));
+                renderHistory();
+            }
+        };
+
+        function run() {
+            state = "WAITING";
+            document.getElementById('mainBtn').disabled = true;
+            document.getElementById('mainBtn').style.opacity = "0.3";
+            
+            setTimeout(() => {
+                start = performance.now();
+                state = "RUNNING";
+                timer = setInterval(() => {
+                    const now = (performance.now() - start) / 1000;
+                    document.getElementById('time').innerText = now.toFixed(2);
+                    const d = document.getElementById('dist').value;
+                    document.getElementById('speed').innerText = ((d/now)*3.6).toFixed(1);
+                }, 40);
+            }, 1000 + Math.random() * 3000);
+        }
+
+        function triggerFinish() { // Appelé par capteur ou simu
+            if(state !== "RUNNING") return;
+            clearInterval(timer);
+            const entry = {
+                id: Date.now(),
+                name: document.getElementById('sessionName').value,
+                time: document.getElementById('time').innerText,
+                speed: document.getElementById('speed').innerText
+            };
+            logs.unshift(entry);
+            save(); renderHistory();
+            state = "IDLE";
+            document.getElementById('mainBtn').disabled = false;
+            document.getElementById('mainBtn').style.opacity = "1";
+        }
+
+        function save() {
+            document.cookie = `history=${encodeURIComponent(JSON.stringify(logs.slice(0,20)))}; max-age=31536000; path=/`;
+        }
+
+        function editLog(id, newName) {
+            const log = logs.find(l => l.id === id);
+            if(log) log.name = newName;
+            save();
+        }
+
+        function deleteLog(id) {
+            logs = logs.filter(l => l.id !== id);
+            save(); renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '<div class="label" style="margin-bottom:10px; margin-left:10px;">Historique</div>';
+            logs.forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'h-item';
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <button class="delete-btn" onclick="deleteLog(${log.id})">×</button>
+                        <input type="text" class="h-edit-name" value="${log.name}" onchange="editLog(${log.id}, this.value)">
+                    </div>
+                    <div class="h-data">${log.time}s <br> <span style="font-size:0.7rem; color:var(--accent)">${log.speed} km/h</span></div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Pour le test : Espace = Fin
+        window.addEventListener('keydown', (e) => { if(e.code === "Space") triggerFinish(); });
+    </script>
+</body>
+</html>        #athlete-view { display: none; width: 90%; max-width: 450px; padding: 20px 0; }
         #time-display { font-size: 7rem; font-weight: 900; letter-spacing: -5px; text-align: center; }
 
         /* --- COACH VIEW --- */
