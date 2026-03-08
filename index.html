@@ -3,207 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StartGo - Premium</title>
+    <title>StartGo - Login & Setup</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
-            --bg: #e2e8f0;
-            --glass: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.8);
-            --text: #0f172a;
-            --sub: #475569;
-            --accent: #f43f5e;
-            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --bg: #f0f2f5;
+            --glass: rgba(255, 255, 255, 0.6);
+            --text: #1e293b;
+            --accent: #ff4757;
+            --sub: #64748b;
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: linear-gradient(160deg, #f8fafc 0%, #cbd5e1 100%);
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center;
             color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px 0 50px;
         }
 
-        .glass-panel {
+        .auth-card {
             background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.7);
+            padding: 40px; border-radius: 40px; width: 90%; max-width: 380px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); text-align: center;
         }
 
-        header {
-            width: 90%; max-width: 450px;
-            padding: 20px; text-align: center; margin-bottom: 15px;
+        h2 { font-weight: 900; letter-spacing: -1.5px; font-size: 1.8rem; margin-bottom: 30px; }
+        
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { font-size: 0.65rem; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-left: 15px; }
+        
+        input {
+            width: 100%; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.5); margin-top: 5px; outline: none; box-sizing: border-box;
+            font-weight: 600; transition: 0.3s;
         }
+        input:focus { border-color: var(--accent); background: white; }
 
-        .hero {
-            width: 90%; max-width: 450px;
-            padding: 40px 20px; text-align: center; margin-bottom: 15px;
+        .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+        
+        .role-option {
+            padding: 15px; border-radius: 20px; background: rgba(255,255,255,0.4);
+            border: 2px solid transparent; cursor: pointer; font-weight: 800; font-size: 0.8rem;
+            transition: 0.3s; color: var(--sub);
         }
-
-        #time {
-            font-size: 7.5rem; font-weight: 900; letter-spacing: -6px;
-            line-height: 1; margin: 10px 0; color: var(--text);
-        }
-
-        .stats-grid {
-            width: 90%; max-width: 450px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
-        }
-
-        .stat-card { padding: 20px; text-align: center; }
-        .label { font-size: 0.65rem; font-weight: 800; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; }
-
-        .controls {
-            width: 90%; max-width: 450px; padding: 25px; margin-bottom: 30px;
-        }
-
-        input[type=range] { width: 100%; height: 6px; border-radius: 10px; appearance: none; background: rgba(0,0,0,0.1); outline: none; margin: 15px 0; }
-        input[type=range]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: var(--text); border-radius: 50%; cursor: pointer; }
+        .role-option.active { border-color: var(--accent); color: var(--accent); background: white; }
 
         #mainBtn {
-            width: 100%; padding: 22px; border-radius: 20px; border: none;
-            background: var(--text); color: white; font-weight: 800; font-size: 1rem;
-            cursor: pointer; transition: 0.3s;
+            width: 100%; padding: 20px; border-radius: 25px; border: none;
+            background: var(--text); color: white; font-weight: 800; cursor: pointer;
+            margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s;
         }
+        #mainBtn:hover { transform: translateY(-2px); }
 
-        /* Historique éditable */
-        .history { width: 90%; max-width: 450px; }
-        .h-item {
-            background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border);
-            padding: 15px 20px; border-radius: 20px; margin-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .h-edit-name { 
-            border: none; background: transparent; font-weight: 800; 
-            font-size: 0.9rem; color: var(--text); width: 120px;
-        }
-
-        .delete-btn {
-            background: none; border: none; color: var(--accent);
-            font-size: 1.2rem; cursor: pointer; padding: 0 5px;
-        }
-
-        .h-data { text-align: right; font-weight: 900; }
+        .toggle-link { font-size: 0.75rem; margin-top: 25px; cursor: pointer; color: var(--sub); font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <header class="glass-panel">
-        <div style="font-weight: 900; font-size: 1.2rem;">STARTGO<span style="color:var(--accent)">.</span></div>
-    </header>
-
-    <main class="hero glass-panel">
-        <input type="text" id="sessionName" value="Course 1" style="background:none; border:none; text-align:center; font-weight:700; width:100%; outline:none;">
-        <div id="time">0.00</div>
-        <div class="label">secondes</div>
-    </main>
-
-    <div class="stats-grid">
-        <div class="stat-card glass-panel">
-            <span class="label">Réaction</span>
-            <div id="react" style="font-size: 1.5rem; font-weight: 800;">0.00</div>
+    <div class="auth-card">
+        <h2>STARTGO<span style="color:var(--accent)">.</span></h2>
+        
+        <div id="signup-fields" style="display: none;">
+            <div class="input-group">
+                <label>Nom complet</label>
+                <input type="text" id="fullname" placeholder="Ex: Marc Kevin">
+            </div>
+            <div class="role-selector">
+                <div class="role-option active" id="opt-athlete" onclick="selectRole('athlete')">ATHLÈTE</div>
+                <div class="role-option" id="opt-coach" onclick="selectRole('coach')">COACH</div>
+            </div>
         </div>
-        <div class="stat-card glass-panel">
-            <span class="label">Vitesse</span>
-            <div id="speed" style="font-size: 1.5rem; font-weight: 800;">0.0</div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="coach@startgo.com">
         </div>
+        
+        <div class="input-group">
+            <label>Mot de passe</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button id="mainBtn" onclick="handleAuth()">Se connecter</button>
+        <div class="toggle-link" id="toggle-btn" onclick="toggleMode()">Nouveau ici ? Créer un compte</div>
     </div>
 
-    <section class="controls glass-panel">
-        <div style="display:flex; justify-content:space-between;" class="label">
-            <span>Distance</span><span id="d-val">10m</span>
-        </div>
-        <input type="range" id="dist" min="5" max="100" value="10" oninput="document.getElementById('d-val').innerText=this.value+'m'">
-        <button id="mainBtn" onclick="run()">LANCER</button>
-    </section>
-
-    <div class="history" id="history-list"></div>
-
     <script>
-        let state = "IDLE", start, timer, logs = [];
-
-        window.onload = () => {
-            const saved = document.cookie.split('; ').find(r => r.startsWith('history='));
-            if (saved) {
-                logs = JSON.parse(decodeURIComponent(saved.split('=')[1]));
-                renderHistory();
-            }
+        // CONFIGURATION AUTOMATIQUE (Tes clés)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKvUUqhl9xIBFVuBDT35rbjkFxBxWX5ZU",
+            authDomain: "startgo-project.firebaseapp.com",
+            projectId: "startgo-project",
+            storageBucket: "startgo-project.firebasestorage.app",
+            messagingSenderId: "920233789220",
+            appId: "1:920233789220:web:9f8a8d9fd3a3add39a55b1"
         };
 
-        function run() {
-            state = "WAITING";
-            document.getElementById('mainBtn').disabled = true;
-            document.getElementById('mainBtn').style.opacity = "0.3";
-            
-            setTimeout(() => {
-                start = performance.now();
-                state = "RUNNING";
-                timer = setInterval(() => {
-                    const now = (performance.now() - start) / 1000;
-                    document.getElementById('time').innerText = now.toFixed(2);
-                    const d = document.getElementById('dist').value;
-                    document.getElementById('speed').innerText = ((d/now)*3.6).toFixed(1);
-                }, 40);
-            }, 1000 + Math.random() * 3000);
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let isSignup = false;
+        let selectedRole = 'athlete';
+
+        function toggleMode() {
+            isSignup = !isSignup;
+            document.getElementById('signup-fields').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('mainBtn').innerText = isSignup ? 'Créer le compte' : 'Se connecter';
+            document.getElementById('toggle-btn').innerText = isSignup ? 'Déjà inscrit ? Connexion' : 'Nouveau ici ? Créer un compte';
         }
 
-        function triggerFinish() { // Appelé par capteur ou simu
-            if(state !== "RUNNING") return;
-            clearInterval(timer);
-            const entry = {
-                id: Date.now(),
-                name: document.getElementById('sessionName').value,
-                time: document.getElementById('time').innerText,
-                speed: document.getElementById('speed').innerText
-            };
-            logs.unshift(entry);
-            save(); renderHistory();
-            state = "IDLE";
-            document.getElementById('mainBtn').disabled = false;
-            document.getElementById('mainBtn').style.opacity = "1";
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('opt-athlete').className = 'role-option' + (role === 'athlete' ? ' active' : '');
+            document.getElementById('opt-coach').className = 'role-option' + (role === 'coach' ? ' active' : '');
         }
 
-        function save() {
-            document.cookie = `history=${encodeURIComponent(JSON.stringify(logs.slice(0,20)))}; max-age=31536000; path=/`;
-        }
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        function editLog(id, newName) {
-            const log = logs.find(l => l.id === id);
-            if(log) log.name = newName;
-            save();
+            try {
+                if (isSignup) {
+                    const name = document.getElementById('fullname').value;
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    
+                    // Enregistrement du profil dans Firestore
+                    await db.collection('users').doc(userCredential.user.uid).set({
+                        name: name,
+                        role: selectedRole,
+                        email: email,
+                        uid: userCredential.user.uid
+                    });
+                    alert("Compte " + selectedRole + " créé avec succès !");
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    alert("Connexion réussie !");
+                }
+                
+                // Ici, on pourra rediriger vers le Dashboard plus tard
+            } catch (error) {
+                alert("Erreur : " + error.message);
+            }
         }
-
-        function deleteLog(id) {
-            logs = logs.filter(l => l.id !== id);
-            save(); renderHistory();
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = '<div class="label" style="margin-bottom:10px; margin-left:10px;">Historique</div>';
-            logs.forEach(log => {
-                const div = document.createElement('div');
-                div.className = 'h-item';
-                div.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <button class="delete-btn" onclick="deleteLog(${log.id})">×</button>
-                        <input type="text" class="h-edit-name" value="${log.name}" onchange="editLog(${log.id}, this.value)">
-                    </div>
-                    <div class="h-data">${log.time}s <br> <span style="font-size:0.7rem; color:var(--accent)">${log.speed} km/h</span></div>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        // Pour le test : Espace = Fin
-        window.addEventListener('keydown', (e) => { if(e.code === "Space") triggerFinish(); });
     </script>
 </body>
 </html>
