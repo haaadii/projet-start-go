@@ -650,10 +650,7 @@ input[type=range]{width:100%;accent-color:var(--blue);}
           <span class="btn-launch-txt">Départ</span>
           <span class="btn-launch-sub">Appuyer pour lancer</span>
         </button>
-        <button class="btn btn-ghost btn-sm" id="test-sound-btn" onclick="testSound()" style="margin-top:10px;width:100%;justify-content:center;display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-          Tester le son
-        </button>
+
       </div>
       <div id="trrun" style="display:none">
         <div class="card glass" style="text-align:center;padding:30px 20px">
@@ -707,6 +704,14 @@ input[type=range]{width:100%;accent-color:var(--blue);}
         <button id="btnu" class="btn btn-ghost btn-sm" style="display:none;margin-top:10px" onclick="askConf('unlink-c')">Dissocier mon coach</button>
       </div>
       <div class="card glass" id="notecard" style="display:none"><div class="ctitle">Notes de mon coach</div><div class="note-box" id="notebox"></div></div>
+      <div class="card glass" id="sound-test-card" style="display:none">
+        <div class="ctitle">Test Son ESP32</div>
+        <div style="font-size:.8rem;color:var(--sub);margin-bottom:14px">Joue <code>0001.mp3</code> en boucle pour régler le volume</div>
+        <button class="btn btn-ghost btn-sm" id="test-sound-btn" onclick="toggleTestSound()" style="width:100%;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+          Démarrer le son
+        </button>
+      </div>
       <div class="card glass"><div class="ctitle">Apparence</div><div class="tgl-row"><span class="tgl-lbl">Mode sombre</span><div class="tgl" id="tgld1" onclick="toggleDark()"></div></div></div>
       <div class="card glass"><div class="ctitle" style="color:var(--red)">Zone Danger</div><div style="display:flex;gap:9px;flex-wrap:wrap"><button class="btn btn-r btn-sm" onclick="askConf('del-me')">Supprimer mon compte</button><button class="btn btn-ghost btn-sm" onclick="signOut()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Déconnexion</button></div></div>
     </div>
@@ -1155,22 +1160,54 @@ function _showBleControls(show) {
     const el = document.getElementById(id);
     if (el) el.style.display = show ? 'block' : 'none';
   });
-  // Bouton test son — visible uniquement si ESP32 connecté
-  const tsb = document.getElementById('test-sound-btn');
-  if (tsb) tsb.style.display = show ? 'flex' : 'none';
+  // Card test son dans Paramètres — visible si ESP32 connecté
+  const card = document.getElementById('sound-test-card');
+  if (card) card.style.display = show ? 'block' : 'none';
+  // Si on déconnecte, arrêter la boucle
+  if (!show) stopTestSound();
 }
 
-async function testSound() {
+let _soundLoopInterval = null;
+let _soundPlaying = false;
+
+function toggleTestSound() {
   if (!BLE.connected) { toast('ESP32 non connecté'); return; }
+  if (_soundPlaying) stopTestSound();
+  else startTestSound();
+}
+
+function startTestSound() {
+  _soundPlaying = true;
+  _updateSoundBtn();
+  BLE.send('PLAY');
+  // Relance le son toutes les 2.5s (durée estimée du mp3)
+  _soundLoopInterval = setInterval(() => {
+    if (!BLE.connected || !_soundPlaying) { stopTestSound(); return; }
+    BLE.send('PLAY');
+  }, 2500);
+}
+
+function stopTestSound() {
+  _soundPlaying = false;
+  if (_soundLoopInterval) { clearInterval(_soundLoopInterval); _soundLoopInterval = null; }
+  BLE.send('STOP');
+  _updateSoundBtn();
+}
+
+function _updateSoundBtn() {
   const btn = document.getElementById('test-sound-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '♪ En cours...'; }
-  await BLE.send('PLAY');
-  setTimeout(() => {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Tester le son';
-    }
-  }, 1500);
+  if (!btn) return;
+  if (_soundPlaying) {
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter le son`;
+    btn.style.background = 'var(--red-bg)';
+    btn.style.color = 'var(--red)';
+    btn.style.borderColor = 'rgba(232,64,74,.25)';
+  } else {
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Démarrer le son`;
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }
 }
 
 /* Callback slider volume — envoie VOL:N à l'ESP32 en temps réel */
