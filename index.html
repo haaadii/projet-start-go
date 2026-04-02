@@ -628,23 +628,28 @@ function mkAv(name,photo,cls){const d=document.createElement('div');d.className=
 const RC={athlete:'var(--blue)',coach:'var(--green)',admin:'var(--red)'};
 
 /* ════════════════════════════════════════════
-   BLE LAYER
+   CONNEXION BLUETOOTH (BLE)
+   Ce bloc gère tout ce qui touche à la liaison
+   sans fil entre le téléphone et l'ESP32
 ════════════════════════════════════════════ */
 const BLE = {
+  // Identifiants uniques du service Bluetooth
   SERVICE: '4fafc201-1fb5-459e-8fcc-c5c9c331914b',
   CMD:     'beb5483e-36e1-4688-b7f5-ea07361b26a8',
   EVT:     '1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e',
   device: null, cmd: null, evt: null,
   on: false, vol: 25,
-  _connecting: false,
+  _enCours: false,
 
+  // Demande au navigateur de scanner les appareils Bluetooth proches
+  // et de se connecter à celui qui s'appelle "StartGo-Pro"
   async connect() {
-    if (BLE._connecting) return;
+    if (BLE._enCours) return;
     if (!navigator.bluetooth) {
       toast('Web Bluetooth non supporté — utilise Chrome sur Android');
       return;
     }
-    BLE._connecting = true;
+    BLE._enCours = true;
     const btn = document.getElementById('ble-btn');
     if (btn) { btn.textContent = 'Connexion...'; btn.disabled = true; }
     try {
@@ -666,7 +671,7 @@ const BLE = {
       if (e.name !== 'NotFoundError') toast('BLE : ' + e.message);
       BLE._ui();
     } finally {
-      BLE._connecting = false;
+      BLE._enCours = false;
       if (btn) btn.disabled = false;
     }
   },
@@ -677,27 +682,32 @@ const BLE = {
 
   _drop() {
     BLE.on = false; BLE.cmd = null; BLE.evt = null;
-    BLE._connecting = false;
+    BLE._enCours = false;
     BLE._ui();
     toast('ESP32 déconnecté — mode simulation');
     if (tSt !== 'IDLE') resetTr();
   },
 
-  async send(msg) {
+  // Envoie une commande texte vers l'ESP32
+  // Retourne true si l'envoi a réussi, false sinon
+  async envoyerCommande(msg) {
     if (!BLE.on || !BLE.cmd) return false;
     try {
       await BLE.cmd.writeValueWithoutResponse(new TextEncoder().encode(msg));
       return true;
     } catch(e) {
-      console.warn('[BLE send error]', e.message);
-      // Si la connexion est perdue silencieusement
+      console.warn('[BLE envoi erreur]', e.message);
       if (e.name === 'NetworkError' || e.name === 'InvalidStateError') {
         BLE._drop();
       }
       return false;
     }
   },
+  // Alias court pour compatibilité interne
+  async send(msg) { return this.envoyerCommande(msg); },
 
+  // Reçoit et traite les messages envoyés par l'ESP32
+  // Chaque message correspond à un événement de la séquence de départ
   _rx(e) {
     const msg = new TextDecoder().decode(e.target.value).trim();
     console.log('[BLE←]', msg);
@@ -835,14 +845,20 @@ async function testBip() {
 }
 
 /* ════════════════════════════════════════════
-   TRAINING STATE MACHINE
+   SÉQUENCE DE CHRONOMÉTRAGE
+   Cette partie gère toute la logique de la session :
+   concentration → délai aléatoire → bip → mesure du temps
+   Elle fonctionne en mode physique (avec l'ESP32)
+   ou en mode simulation (sans Bluetooth, dans le navigateur)
 ════════════════════════════════════════════ */
-let tSt='IDLE', tBip=null, tLift=null, rafId=null;
+let etatSession='IDLE', momentBip=null, momentPied=null, animationId=null;
+// Alias courts pour ne pas casser le reste du code
+let tSt=etatSession, tBip=momentBip, tLift=momentPied, rafId=animationId;
 
 async function startSeq() {
   if (tSt !== 'IDLE') return;
 
-  // Reset UI
+  // Remet l'interface à zéro avant de démarrer
   document.getElementById('trcfg').style.display    = 'none';
   document.getElementById('trrun').style.display    = 'block';
   document.getElementById('trres').style.display    = 'none';
@@ -873,6 +889,8 @@ async function startSeq() {
   }
 }
 
+// Mode simulation : toute la séquence tourne dans le navigateur
+// Le bip est généré par l'API Web Audio au lieu du DFPlayer
 function _runSimulation(concMs, aleaMinMs, aleaMaxMs) {
   tSt = 'WAIT';
   setSP('WAIT', 'Concentration...');
@@ -927,12 +945,14 @@ function doLift() {
   })();
 }
 
+// L'athlète arrive en bout de piste : on arrête le chrono
+// et on calcule toutes les statistiques de la session
 async function doFinish() {
   if (tSt !== 'RUN') return;
   cancelAnimationFrame(rafId);
 
-  const react  = (tLift - tBip) / 1000;
-  const course = (performance.now() - tLift) / 1000;
+  const react  = (tLift - tBip) / 1000;   // temps entre le bip et le départ
+  const course = (performance.now() - tLift) / 1000;  // temps de course pur
   const dist   = parseInt(document.getElementById('sld').value) || 10;
   const kmh    = course > 0 ? ((dist / course) * 3.6).toFixed(1) : '0.0';
   tSt = 'END';
@@ -991,10 +1011,19 @@ function setSP(s, lbl) {
   el.classList.add(m[s] || 'sp-idle');
 }
 
-/* ── Audio simulation ── */
-let actx=null;
-function gac(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+/* ── Sons de simulation (mode sans ESP32) ──
+   On utilise l'API Web Audio du navigateur pour générer
+   des bips synthétiques quand l'ESP32 n'est pas connecté
+── */
+let contexteAudio = null;
+function obtenirContexteAudio() {
+  if (!contexteAudio) contexteAudio = new (window.AudioContext || window.webkitAudioContext)();
+  return contexteAudio;
+}
+function gac(){ return obtenirContexteAudio(); }
+// Bip aigu de départ (880 Hz, court)
 function playBip(){const c=gac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.5,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.2);o.start();o.stop(c.currentTime+.2);}
+// Son grave de faux départ (200 Hz, plus long)
 function playFBip(){const c=gac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=200;o.type='square';g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);o.start();o.stop(c.currentTime+.5);}
 
 /* ════════════════════════════════════════════
