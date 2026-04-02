@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>StartGo Pro</title>
+<title>StartGo</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzNiNmZmMCIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMyIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgbGV0dGVyLXNwYWNpbmc9Ii0xIj5TPC90ZXh0PgogIDxjaXJjbGUgY3g9IjIzIiBjeT0iMjIiIHI9IjIuNSIgZmlsbD0iIzYwYTVmYSIvPgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzNiNmZmMCIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMyIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgbGV0dGVyLXNwYWNpbmc9Ii0xIj5TPC90ZXh0PgogIDxjaXJjbGUgY3g9IjIzIiBjeT0iMjIiIHI9IjIuNSIgZmlsbD0iIzYwYTVmYSIvPgo8L3N2Zz4=">
+<meta name="apple-mobile-web-app-title" content="StartGo">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3b6ff0">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -851,9 +856,7 @@ async function testBip() {
    Elle fonctionne en mode physique (avec l'ESP32)
    ou en mode simulation (sans Bluetooth, dans le navigateur)
 ════════════════════════════════════════════ */
-let etatSession='IDLE', momentBip=null, momentPied=null, animationId=null;
-// Alias courts pour ne pas casser le reste du code
-let tSt=etatSession, tBip=momentBip, tLift=momentPied, rafId=animationId;
+let tSt='IDLE', tBip=null, tLift=null, rafId=null;
 
 async function startSeq() {
   if (tSt !== 'IDLE') return;
